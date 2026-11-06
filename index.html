@@ -1,0 +1,439 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><script src="https://accounts.google.com/gsi/client" defer></script><script src="config.js"></script><title>接客サービスの担当割り</title></head><body>
+<div id="assignee-wizard" aria-label="担当者選択プロトタイプ" style="box-sizing:border-box">
+  <header>
+    <span class="aw-date-label" id="aw-date" hidden></span>
+    <span id="aw-status" role="status" hidden></span>
+  </header>
+  <div id="aw-content"></div>
+</div>
+<style>
+#assignee-wizard{--aw-bg:light-dark(#fff,#202824);--aw-ink:light-dark(#233d31,#edf5ef);--aw-muted:light-dark(#55685d,#b5c8bb);--aw-line:light-dark(#cedbd2,#52665a);--aw-fill:light-dark(#f1f6f2,#2c3c32);--aw-green:light-dark(#26553c,#b3d5bd);--aw-on:light-dark(#fff,#163222);--aw-edit:light-dark(#fff8e6,#453e2d);font:15px/1.5 'Yu Gothic UI',Meiryo,sans-serif;color:var(--aw-ink);background:var(--aw-bg);width:100%;border:1px solid var(--aw-line)}
+#assignee-wizard *{box-sizing:border-box}#assignee-wizard header{display:flex;gap:16px;justify-content:flex-end;align-items:center;flex-wrap:wrap;padding:8px 22px;background:var(--aw-fill);border-bottom:1px solid var(--aw-line)}#assignee-wizard input,#assignee-wizard select{font:inherit;color:var(--aw-ink);background:var(--aw-bg);border:1px solid var(--aw-line);border-radius:5px;min-width:0;padding:7px 9px}#assignee-wizard button{font:inherit;background:var(--aw-bg);color:var(--aw-ink);border:1px solid var(--aw-line);border-radius:6px;padding:10px 18px;min-height:44px}#assignee-wizard button.aw-primary{background:var(--aw-green);color:var(--aw-on);border-color:var(--aw-green)}#assignee-wizard button:disabled{opacity:.45}#assignee-wizard #aw-content{padding:18px 22px}#assignee-wizard .aw-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}#assignee-wizard .aw-step{color:var(--aw-muted);font-size:13px}#assignee-wizard h3{font-size:25px;font-weight:500;margin:5px 0 22px}#assignee-wizard .aw-footer{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:26px}#assignee-wizard .aw-actions{display:flex;gap:10px;flex-wrap:wrap}#assignee-wizard .aw-review{display:grid;grid-template-columns:1fr 1fr;gap:18px}#assignee-wizard table{border-collapse:collapse;width:100%;font-size:13px;table-layout:fixed}#assignee-wizard th{font-weight:500;text-align:left;padding:7px;background:var(--aw-fill)}#assignee-wizard thead th:first-child{width:44%}#assignee-wizard td{padding:5px 6px;border-bottom:1px solid var(--aw-line);overflow-wrap:anywhere;vertical-align:middle}#assignee-wizard td select{width:100%;font-size:14px;padding:5px;background:var(--aw-edit)}#assignee-wizard .aw-section{margin:0 0 14px}#assignee-wizard .aw-section h4{font-size:14px;font-weight:500;margin:0;padding:7px;background:var(--aw-fill);border-top:2px solid var(--aw-green)}#assignee-wizard .aw-saved{padding:12px 15px;margin-bottom:14px;background:var(--aw-fill);border-left:4px solid var(--aw-green)}#assignee-wizard .aw-saved strong{font-weight:500}#assignee-wizard .aw-empty{color:var(--aw-muted)}
+@media(max-width:800px){#assignee-wizard .aw-review{grid-template-columns:1fr}#assignee-wizard h3{font-size:22px}}@media(max-width:420px){#assignee-wizard header,#assignee-wizard thead th:first-child{width:38%}#assignee-wizard td{padding:5px 3px}#assignee-wizard td select{font-size:16px;padding:4px 1px}#assignee-wizard .aw-footer{align-items:stretch}#assignee-wizard .aw-actions{width:100%}}
+#assignee-wizard .aw-floor-grid{max-width:780px;margin:0 auto}#assignee-wizard .aw-floor-grid table{font-size:16px}#assignee-wizard .aw-floor-grid thead th:first-child{width:32%}#assignee-wizard .aw-floor-grid td{padding:7px 10px}#assignee-wizard .aw-floor-grid td select{font-size:16px;min-height:42px;padding:6px 10px}@media(max-width:420px){#assignee-wizard .aw-floor-grid td{padding:5px 3px}#assignee-wizard .aw-floor-grid td select{padding:5px 2px}#assignee-wizard .aw-floor-grid table{font-size:14px}}
+#assignee-wizard .aw-floor-grid td select,#assignee-wizard .aw-review td select{min-height:44px;font-size:16px}
+#assignee-wizard .aw-floor-grid td{padding-block:4px}
+#assignee-wizard .aw-floor-grid thead th:first-child{width:22%}
+#assignee-wizard .aw-review{grid-template-columns:repeat(2,minmax(0,1fr))}
+#assignee-wizard .aw-board-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#assignee-wizard .aw-board-floors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#assignee-wizard .aw-board-floors h4,#assignee-wizard .aw-board-groups h4{margin:0;background:var(--aw-fill);padding:6px 8px;border-top:2px solid var(--aw-green);font-weight:500}
+#assignee-wizard .aw-board-groups td,#assignee-wizard .aw-board-floors td{padding:3px 6px}
+#assignee-wizard .aw-board-groups thead th:first-child{width:52%}
+#assignee-wizard .aw-board-floors thead th:first-child{width:26%}
+#assignee-wizard .aw-board-title{font-size:20px;margin:0 0 12px}
+#assignee-wizard .aw-floor-title{font-size:17px;margin:14px 0 6px;font-weight:500}
+#assignee-wizard[data-mode=board] #aw-content{padding-top:12px}
+@media(max-width:680px){
+  #assignee-wizard .aw-review{grid-template-columns:1fr}
+  #assignee-wizard .aw-board-groups,#assignee-wizard .aw-board-floors{grid-template-columns:1fr}
+}
+@media(pointer:coarse){
+  
+  #assignee-wizard .aw-footer button{min-height:48px}
+}
+#assignee-wizard tbody th{background:none;padding:5px 6px;border-bottom:1px solid var(--aw-line);overflow-wrap:anywhere}@media(max-height:820px){
+  #assignee-wizard header{padding-block:8px}
+  
+  #assignee-wizard #aw-content{padding-block:12px}
+  #assignee-wizard .aw-heading{margin-bottom:6px}
+  #assignee-wizard h3{margin-bottom:10px}
+  #assignee-wizard .aw-footer{margin-top:12px}
+  #assignee-wizard .aw-floor-grid td{padding-block:2px}
+  #assignee-wizard .aw-board-groups tbody th,#assignee-wizard .aw-board-floors tbody th{padding-block:3px}
+}
+@media(min-width:1200px){
+  #assignee-wizard .aw-board-layout{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+  #assignee-wizard .aw-board-groups,#assignee-wizard .aw-board-floors{display:contents}
+  #assignee-wizard .aw-floor-title{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+}
+#assignee-wizard .aw-task-title{margin-block:8px 10px}
+#assignee-wizard .aw-floor-grid{max-width:none;min-block-size:360px}
+#assignee-wizard .aw-floor-grid thead th:first-child{width:36%}
+#assignee-wizard .aw-footer [data-action=next]{min-inline-size:10em;min-height:52px}
+@media(max-width:420px){
+  #assignee-wizard .aw-heading:has(.aw-step + [data-action=review]){display:grid;grid-template-columns:1fr auto;gap:6px}
+  #assignee-wizard .aw-heading [data-action=review],#assignee-wizard .aw-footer button{padding-inline:8px}
+  #assignee-wizard .aw-footer [data-action=next]{min-inline-size:9em}
+}
+@media(min-width:760px) and (max-height:650px){
+  #assignee-wizard #aw-content:has(.aw-task-title){
+    display:grid;
+    grid-template-columns:minmax(165px,1fr) minmax(0,4fr);
+    grid-template-rows:auto 1fr auto;
+    column-gap:24px;
+    align-items:start;
+  }
+  #assignee-wizard .aw-heading:has([data-action=review]){grid-column:1;grid-row:2;flex-direction:column;align-items:flex-start;gap:16px}
+  #assignee-wizard .aw-task-title{grid-column:1;grid-row:1;margin-top:0}
+  #assignee-wizard .aw-floor-grid{grid-column:2;grid-row:1 / 3;width:100%;min-block-size:350px}
+  #assignee-wizard .aw-footer{grid-column:2}
+}
+#assignee-wizard .aw-floor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+#assignee-wizard .aw-person-panel h4{margin:0 0 10px;padding:8px;background:var(--aw-fill)}
+#assignee-wizard .aw-names{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:6px}
+#assignee-wizard .aw-names button,#assignee-wizard [data-slot]{padding:4px;min-height:44px}
+#assignee-wizard .aw-names button{position:relative;padding:12px 2px 4px;min-inline-size:0;min-height:54px;font-size:16px;overflow-wrap:anywhere}
+#assignee-wizard .aw-names button[aria-pressed=true]::after{
+  content:"✓" / "";
+  position:absolute;
+  inset-block-start:2px;
+  inset-inline-end:4px;
+  font-size:11px;
+  line-height:1;
+}
+#assignee-wizard [data-slot]{width:100%}
+#assignee-wizard .aw-floor-grid button[aria-pressed=true]{background:var(--aw-green);color:var(--aw-on)}
+@media(max-width:520px){
+ #assignee-wizard .aw-floor-grid{grid-template-columns:1fr}
+}
+#assignee-wizard .aw-footer{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center}
+#assignee-wizard .aw-progress{display:flex;align-items:center;justify-content:space-between;gap:2px;width:100%;max-width:290px;justify-self:center}
+#assignee-wizard .aw-dot{inline-size:7px;block-size:7px;flex:0 0 7px;border-radius:50%;border:1px solid var(--aw-muted)}
+#assignee-wizard .aw-dot[data-position=past]{background:var(--aw-muted)}
+#assignee-wizard .aw-dot[data-position=current]{background:var(--aw-green);border-color:var(--aw-green);outline:1px solid var(--aw-green);outline-offset:2px}
+@media(max-width:550px){
+ #assignee-wizard .aw-footer{grid-template-columns:auto 1fr auto;row-gap:12px}
+ #assignee-wizard .aw-progress{grid-column:1 / -1;grid-row:1}
+ #assignee-wizard .aw-footer [data-action=next]{grid-column:3}
+}
+#assignee-wizard .aw-date-label{display:flex;gap:8px;align-items:center;font-weight:500}
+#assignee-wizard .aw-task-title{font-size:26px;line-height:1.25;font-weight:700}
+#assignee-wizard .aw-person-panel h4{font-size:17px;font-weight:500;border-inline-start:3px solid var(--aw-green)}
+#assignee-wizard .aw-footer .aw-primary{font-size:16px;font-weight:500}
+#assignee-wizard #aw-status{font-size:13px;color:var(--aw-muted)}
+@media(max-width:520px){
+ #assignee-wizard header{gap:8px}
+ #assignee-wizard .aw-task-title{font-size:23px}
+}
+@media(min-width:760px) and (max-height:650px){
+ #assignee-wizard .aw-task-title{font-size:23px}
+}
+#assignee-wizard .aw-floor-table{
+  --aw-idle:light-dark(#f1f2f1,#292e2b);
+  --aw-idle-button:light-dark(#f8f9f8,#323a35);
+}
+#assignee-wizard .aw-floor-table tr[data-active=false]{background:var(--aw-idle);color:var(--aw-muted)}
+#assignee-wizard .aw-floor-table tr[data-active=false] button{background:var(--aw-idle-button);color:inherit}
+#assignee-wizard .aw-floor-table tr[data-active=true]{background:var(--aw-fill)}
+#assignee-wizard .aw-floor-table tr[data-active=true] th{box-shadow:inset 3px 0 var(--aw-green);padding-inline-start:9px}
+#assignee-wizard .aw-floor-table,
+#assignee-wizard .aw-floor-table + .aw-person-panel{--aw-role-bg:var(--aw-green);--aw-role-ink:var(--aw-on)}
+#assignee-wizard .aw-floor-table[data-role=sub],
+#assignee-wizard .aw-floor-table + .aw-person-panel[data-role=sub]{
+  --aw-role-bg:light-dark(#b8d7c4,#5c816e);
+  --aw-role-ink:light-dark(#163222,#fff);
+}
+#assignee-wizard .aw-floor-table[data-role=main] th[data-role=main],
+#assignee-wizard .aw-floor-table[data-role=sub] th[data-role=sub],
+#assignee-wizard .aw-floor-table button[aria-pressed=true],
+#assignee-wizard .aw-floor-table + .aw-person-panel h4,
+#assignee-wizard .aw-floor-table + .aw-person-panel button[aria-pressed=true]{
+  background:var(--aw-role-bg);
+  color:var(--aw-role-ink);
+  border-color:var(--aw-role-bg);
+}
+#assignee-wizard .aw-task-title{color:var(--aw-green)}
+#assignee-wizard .aw-step-count{
+  display:inline-block;
+  padding:1px 7px;
+  margin-inline-start:4px;
+  border-radius:4px;
+  background:var(--aw-fill);
+  color:var(--aw-ink);
+  font-size:14px;
+  font-weight:500;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+#assignee-wizard header[hidden],#assignee-wizard .aw-date-label[hidden]{display:none}
+#assignee-wizard .aw-date-label{min-height:44px;font-size:16px}
+#assignee-wizard .aw-start-title{margin:0 0 16px;font-weight:700}
+#assignee-wizard .aw-start-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:480px}
+#assignee-wizard .aw-start-options button{display:grid;gap:4px;min-height:80px;padding:8px;background:var(--aw-fill)}
+#assignee-wizard .aw-start-options strong{font-size:20px;color:var(--aw-green)}
+#assignee-wizard .aw-attendance{display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,3fr);gap:16px}
+#assignee-wizard .aw-shifts{display:grid;gap:6px}
+#assignee-wizard .aw-shifts button{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px}
+#assignee-wizard .aw-attendance button[aria-pressed=true]{background:var(--aw-green);color:var(--aw-on)}
+#assignee-wizard .aw-attendance-footer{display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+@media(max-width:520px){
+ #assignee-wizard .aw-attendance{grid-template-columns:1fr}
+ #assignee-wizard .aw-shifts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+#assignee-wizard .aw-attendance [data-attendee]:disabled:has(small){
+  opacity:1;
+  color:var(--aw-muted);
+  background:var(--aw-fill);
+}
+#assignee-wizard .aw-attendance [data-attendee] small{display:block;font-size:11px}
+#assignee-wizard .aw-error{color:var(--aw-ink);background:var(--aw-edit);padding:10px 12px}</style>
+<script id="aw-source" type="application/json">{"tasks":[{"id":"task-13","group":"ミーティング前の業務","name":"朝刊"},{"id":"task-14","group":"ミーティング前の業務","name":"パントリー掃除"},{"id":"task-15","group":"ミーティング前の業務","name":"アメニティ補充"},{"id":"task-16","group":"ミーティング前の業務","name":"おしぼり補充"},{"id":"task-17","group":"ミーティング前の業務","name":"風呂そうじ"},{"id":"task-18","group":"ミーティング前の業務","name":"ベッドメイク"},{"id":"task-20","group":"共通業務","name":"庭園入口清掃"},{"id":"task-21","group":"共通業務","name":"つくばい掃除"},{"id":"task-22","group":"共通業務","name":"ロクシタン補充"},{"id":"task-23","group":"共通業務","name":"ラウンジ準備"},{"id":"task-24","group":"共通業務","name":"ドリンク補充"},{"id":"task-25","group":"共通業務","name":"化粧水補充"},{"id":"floor-13-27","group":"リネン","name":"1階 リネン"},{"id":"floor-13-34","group":"ベッドメイク","name":"1階 ベッドメイク"},{"id":"floor-13-41","group":"客室点検","name":"1階 客室点検"},{"id":"floor-14-27","group":"リネン","name":"2階 リネン"},{"id":"floor-14-34","group":"ベッドメイク","name":"2階 ベッドメイク"},{"id":"floor-14-41","group":"客室点検","name":"2階 客室点検"},{"id":"floor-15-27","group":"リネン","name":"3階 リネン"},{"id":"floor-15-34","group":"ベッドメイク","name":"3階 ベッドメイク"},{"id":"floor-15-41","group":"客室点検","name":"3階 客室点検"},{"id":"floor-16-27","group":"リネン","name":"4階 リネン"},{"id":"floor-16-34","group":"ベッドメイク","name":"4階 ベッドメイク"},{"id":"floor-16-41","group":"客室点検","name":"4階 客室点検"},{"id":"floor-17-27","group":"リネン","name":"5階 リネン"},{"id":"floor-17-34","group":"ベッドメイク","name":"5階 ベッドメイク"},{"id":"floor-17-41","group":"客室点検","name":"5階 客室点検"},{"id":"floor-18-27","group":"リネン","name":"6階 リネン"},{"id":"floor-18-34","group":"ベッドメイク","name":"6階 ベッドメイク"},{"id":"floor-18-41","group":"客室点検","name":"6階 客室点検"},{"id":"clean-21","group":"清掃業務","name":"快活楼"},{"id":"common-21","group":"共通業務","name":"お茶出し"},{"id":"clean-22","group":"清掃業務","name":"錦旗"},{"id":"common-22","group":"共通業務","name":"客室案内"},{"id":"clean-23","group":"清掃業務","name":"花柏の湯"},{"id":"common-23","group":"共通業務","name":"朝お見送り"},{"id":"clean-24","group":"清掃業務","name":"維新の湯"}],"people":[],"front":[]}</script>
+<script>
+(()=>{
+ const root=document.getElementById('assignee-wizard');const data=JSON.parse(document.getElementById('aw-source').textContent);const tasks=data.tasks;const empty=()=>Object.fromEntries(tasks.map(t=>[t.id,{main:'ーー',sub:'ーー'}]));
+ const groups=['ミーティング前の業務','共通業務','リネン','ベッドメイク','客室点検','清掃業務'];
+ const makeUnits=()=>groups.flatMap(group=>{
+  const items=tasks.filter(task=>task.group===group);
+  if(items[0]?.id.startsWith('floor-'))return [{name:group,group:'フロア別',items}];
+  return items.map(task=>({name:task.name,group,items:[task]}));
+ });
+ let units=makeUnits();
+ const shifts=[['早番',8],['遅出',8],['中抜',6],['9時出',4],['フロント',2]];
+ const frontIndex=shifts.length-1;
+ const emptyAttendance=()=>shifts.map(()=>[]);
+ let activeShift=0;
+ const availablePeople=()=>['ーー',...data.people.filter(person=>state.attendance.slice(0,frontIndex).some(list=>list.includes(person)))];
+ let target=null;
+ let state={step:0,view:'start',date:null,draft:empty(),attendance:emptyAttendance(),saved:null};
+ const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const main=root.querySelector('#aw-content');const date=root.querySelector('#aw-date');const status=root.querySelector('#aw-status');
+ const monitor=new URLSearchParams(location.search).get('view')==='monitor';
+ let accessToken='';
+ let tokenExpiresAt=0;
+ function authorize(){
+  const config=window.assignmentConfig;
+  if(!config?.clientId||!config?.apiUrl) return Promise.reject(new Error('接続設定が未登録です。管理者に確認してください。'));
+  if(accessToken&&Date.now()<tokenExpiresAt)return Promise.resolve(accessToken);
+  return new Promise((resolve,reject)=>{
+    if(!window.google?.accounts?.oauth2){reject(new Error('Googleログインを読み込めませんでした。画面を開き直してください。'));return;}
+    google.accounts.oauth2.initTokenClient({
+      client_id:config.clientId,
+      scope:'openid email',
+      callback:result=>{
+        if(!result.access_token){reject(new Error('Googleログインを完了できませんでした。'));return;}
+        accessToken=result.access_token;
+        tokenExpiresAt=Date.now()+Math.max(0,Number(result.expires_in)-30)*1000;
+        resolve(accessToken);
+      },
+      error_callback:()=>reject(new Error('Googleログインを完了できませんでした。'))
+    }).requestAccessToken();
+  });
+ }
+ async function request(action,payload){
+  const token=await authorize();
+  const response=await fetch(window.assignmentConfig.apiUrl,{
+    method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},credentials:'omit',
+    body:JSON.stringify({action,payload,accessToken:token})
+  });
+  if(!response.ok)throw new Error('シートに接続できませんでした。');
+  const result=await response.json();
+  if(!result.ok){
+    if(result.message?.includes('再ログイン'))accessToken='';
+    throw new Error(result.message||'処理できませんでした。');
+  }
+  return result.data;
+ }
+ let busy=false;
+ let revision=null;
+ function showError(error){
+  busy=false;
+  if(monitor&&!state.date)renderMonitorSignIn();
+  else render();
+  const alert=document.createElement('p');
+  alert.className='aw-error';
+  alert.setAttribute('role','alert');
+  alert.textContent=error?.message||'通信に失敗しました。再度お試しください。';
+  main.prepend(alert);
+ }
+ function connect(date){
+  busy=true;
+  render();
+  request('load',{date}).then(result=>{
+    data.people=result.people;
+    data.front=result.front;
+    tasks.forEach(task=>{
+      const label=result.labels[task.id];
+      task.name=task.id.startsWith('floor-')?label+' '+task.group:label;
+    });
+    units=makeUnits();
+    revision=result.revision;
+    state={...state,date,step:0,view:'attendance',attendance:uniqueAttendance(result.attendance),draft:result.assignments};
+    busy=false;
+    render();
+  }).catch(showError);
+ }
+ function save(){
+  if(busy)return;
+  const payload={date:state.date,revision,attendance:state.attendance,assignments:state.draft};
+  busy=true;
+  render();
+  request('save',payload).then(result=>{
+    revision=result.revision;
+    state.saved={date:state.date,assignments:JSON.parse(JSON.stringify(state.draft))};
+    state.view='saved';
+    busy=false;
+    render();
+  }).catch(showError);
+ }
+ function options(v){return availablePeople().map(p=>`<option${v===p?' selected':''}>${esc(p)}</option>`).join('');}
+ function table(list,editable,assignments=state.saved?.assignments,floors=false){return `<table><thead><tr><th>${floors?'階':'業務'}</th><th>主担当</th><th>副担当</th></tr></thead><tbody>${list.map(t=>{const v=(editable?state.draft:assignments)[t.id];return `<tr><th scope="row">${esc(floors?t.name.split(' ')[0]:t.name)}</th>${['main','sub'].map(role=>`<td>${editable?`<select aria-label="${esc(t.name)}の${role==='main'?'主担当':'副担当'}" data-id="${t.id}" data-edit="${role}">${options(v[role])}</select>`:esc(v[role])}</td>`).join('')}</tr>`;}).join('')}</tbody></table>`;}
+ function assignPerson(task,role,person){
+  const assignment=state.draft[task];
+  assignment[role]=person;
+  if(role==='main'&&assignment.sub===person)assignment.sub='ーー';
+ }
+ const roleName=role=>role==='main'?'主担当':'副担当';
+ function personList(task,role,label){
+  return `<section class="aw-person-panel" data-role="${role}" aria-label="${esc(label)}"><h4 aria-live="polite">${esc(label)}</h4><div class="aw-names">${availablePeople().map(person=>{
+    const selected=state.draft[task.id][role]===person;
+    return `<button type="button" data-person="${esc(person)}" data-task="${task.id}" data-role="${role}" aria-pressed="${selected}">${esc(person)}</button>`;
+  }).join('')}</div></section>`;
+ }
+ function assignmentControls(unit){
+  if(unit.items.length===1){
+    const [task]=unit.items;
+    return ['main','sub'].map(role=>personList(task,role,roleName(role))).join('');
+  }
+  if(!unit.items.some(task=>task.id===target?.id))target={id:unit.items[0].id,role:'main'};
+  const active=unit.items.find(task=>task.id===target.id);
+  const floor=task=>task.name.split(' ')[0];
+  const rows=unit.items.map(task=>`<tr data-active="${task.id===target.id}"><th scope="row">${floor(task)}</th>${['main','sub'].map(role=>{
+    const selected=task.id===target.id&&role===target.role;
+    return `<td><button type="button" data-slot="${task.id}" data-role="${role}" aria-label="${floor(task)}の${roleName(role)} ${esc(state.draft[task.id][role])}" aria-pressed="${selected}">${esc(state.draft[task.id][role])}</button></td>`;
+  }).join('')}</tr>`).join('');
+  return `<table class="aw-floor-table" data-role="${target.role}"><thead><tr><th>階</th><th data-role="main">主担当</th><th data-role="sub">副担当</th></tr></thead><tbody>${rows}</tbody></table>${personList(active,target.role,floor(active)+'の'+roleName(target.role)+'を選択中')}`;
+ }
+ function stepMarkers(){
+  return `<span class="aw-progress" aria-hidden="true">${units.map((_,index)=>{
+    const position=index===state.step?'current':index<state.step?'past':'ahead';
+    return `<span class="aw-dot" data-position="${position}"></span>`;
+  }).join('')}</span>`;
+ }
+ function renderBoard(){
+  const assignments=state.saved?.assignments ?? state.draft;
+  const ordinary=tasks.filter(t=>!t.id.startsWith('floor-'));
+  const section=(group,list,floors=false)=>`<section><h4>${esc(group)}</h4>${table(list,false,assignments,floors)}</section>`;
+  main.innerHTML=`<h3 class="aw-board-title">担当一覧</h3>
+    <div class="aw-board-layout"><div class="aw-board-groups">${[...new Set(ordinary.map(t=>t.group))].map(g=>section(g,ordinary.filter(t=>t.group===g))).join('')}</div>
+    <h4 class="aw-floor-title">フロア別の準備担当</h4>
+    <div class="aw-board-floors">${units.filter(u=>u.items.length>1).map(u=>section(u.name,u.items,true)).join('')}</div></div>`;
+ }
+ const tokyoDate=new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'});
+ function availableDates(){
+  const now=Date.now();
+  return [now,now+86400000].map(value=>tokyoDate.format(value).replaceAll('/','-'));
+ }
+ function renderStart(){
+  const dates=availableDates();
+  main.innerHTML=`<h3 class="aw-start-title">対象日を選ぶ</h3><div class="aw-start-options">${['今日','明日'].map((label,index)=>`
+    <button type="button" data-start="${dates[index]}"><strong>${label}</strong><span>${dates[index].replaceAll('-','/')}</span></button>
+  `).join('')}</div>`;
+ }
+ function unavailableAssignments(){
+  const candidates=new Set(availablePeople());
+  return Object.values(state.draft).flatMap(assignment=>['main','sub']
+    .filter(role=>!candidates.has(assignment[role])).map(role=>[assignment,role]));
+ }
+ function otherServiceShift(person){
+  if(activeShift===frontIndex)return -1;
+  return state.attendance.findIndex((list,index)=>index<frontIndex&&index!==activeShift&&list.includes(person));
+ }
+ function renderAttendance(){
+  const [label,limit]=shifts[activeShift];
+  const selected=state.attendance[activeShift];
+  const roster=activeShift===frontIndex?data.front:data.people;
+  main.innerHTML=`<h3 class="aw-start-title">出勤者を選ぶ</h3>
+    <div class="aw-attendance">
+      <div class="aw-shifts" aria-label="勤務区分">${shifts.map(([name,capacity],index)=>`
+        <button type="button" data-shift="${index}" aria-pressed="${activeShift===index}"><strong>${name}</strong><span>${state.attendance[index].length} / ${capacity}名</span></button>
+      `).join('')}</div>
+      <section class="aw-person-panel"><h4>${label}の出勤者</h4><div class="aw-names">${roster.map((person,index)=>{
+        const checked=selected.includes(person);
+        const other=otherServiceShift(person);
+        const disabled=other>=0||(!checked&&selected.length>=limit);
+        const detail=other>=0?`<small>${shifts[other][0]}で選択済み</small>`:'';
+        return `<button type="button" data-attendee="${index}" aria-pressed="${checked}" ${disabled?'disabled':''}>${esc(person)}${detail}</button>`;
+      }).join('')}</div></section>
+    </div>
+    <div class="aw-attendance-footer">${unavailableAssignments().length?'<span>出勤者から外れた方の担当は「ーー」に戻ります。</span>':''}<button type="button" class="aw-primary" data-action="finish-attendance">業務の担当割りへ</button></div>`;
+ }
+ function render(){
+  const board=monitor;
+  root.dataset.mode=board?'board':'input';
+  status.hidden=!board;
+  const shownDate=(board?state.saved?.date:null)??state.date;
+  date.hidden=!shownDate;
+  date.textContent=shownDate?'対象日 '+shownDate.replaceAll('-','/'):'';
+  date.closest('header').hidden=!board&&!shownDate;
+  if(busy){main.innerHTML='<p role="status">処理中です…</p>';return;}
+  if(board){
+
+
+    status.textContent='閲覧専用';
+    renderBoard();
+    return;
+  }
+  if(state.view==='start'){renderStart();return;}
+  if(state.view==='attendance'){renderAttendance();return;}
+ if(state.view==='wizard'){const t=units[state.step];main.innerHTML=`<div class="aw-heading"><span class="aw-step" aria-live="polite">${esc(t.group)} <strong class="aw-step-count">${state.step+1} / ${units.length}</strong></span><button type="button" data-action="review">一覧で確認・修正</button></div><h3 class="aw-task-title">${esc(t.name)}</h3><div class="aw-floor-grid">${assignmentControls(t)}</div><div class="aw-footer"><button type="button" data-action="back">前へ</button>${stepMarkers()}<button type="button" class="aw-primary" data-action="next">${state.step===units.length-1?'決定して一覧へ':'決定して次へ'}</button></div>`;
+ }else{const saved=state.view==='saved';const unassigned=tasks.filter(t=>(saved?state.saved.assignments:state.draft)[t.id].main==='ーー').length;main.innerHTML=`${saved?'<div class="aw-saved"><strong>スプレッドシートに保存しました</strong></div>':''}<div class="aw-heading"><div><h3 style="margin:0;font-size:21px">${saved?'確定後の担当表':'担当一覧の確認・修正'}</h3><span class="aw-step">${tasks.length}業務　／　主担当未選択 ${unassigned}件</span></div><div class="aw-actions">${saved?'<button type="button" data-action="edit">一覧を修正</button>':'<button type="button" data-action="resume">担当入力に戻る</button><button type="button" class="aw-primary" data-action="save">担当を確定</button>'}</div></div><div class="aw-review">${[groups.slice(0,2),groups.slice(2)].map(gs=>`<div>${gs.map(g=>`<section class="aw-section"><h4>${esc(g)}</h4>${table(tasks.filter(t=>t.group===g),!saved)}</section>`).join('')}</div>`).join('')}</div>`;}}
+ root.addEventListener('click',e=>{
+  const start=e.target.closest('[data-start]');
+  if(start&&state.view==='start'){
+    const chosen=start.dataset.start;
+    if(!availableDates().includes(chosen)){renderStart();return;}
+    connect(chosen);
+    return;
+  }
+  const shift=e.target.closest('[data-shift]');
+  if(shift&&state.view==='attendance'){
+    activeShift=Number(shift.dataset.shift);
+    render();
+    root.querySelector('[data-shift][aria-pressed=true]')?.focus();
+    return;
+  }
+  const attendee=e.target.closest('[data-attendee]');
+  if(attendee&&state.view==='attendance'){
+    const index=Number(attendee.dataset.attendee);
+    const person=(activeShift===frontIndex?data.front:data.people)[index];
+    const list=state.attendance[activeShift];
+    if(list.includes(person))state.attendance[activeShift]=list.filter(name=>name!==person);
+    else if(otherServiceShift(person)<0&&list.length<shifts[activeShift][1])list.push(person);
+    render();
+    root.querySelector(`[data-attendee="${index}"]`)?.focus();
+    return;
+  }
+  const slot=e.target.closest('[data-slot]');
+  if(slot){
+    const {slot:id,role}=slot.dataset;
+    target={id,role};
+    render();
+    root.querySelector(`[data-slot="${id}"][data-role="${role}"]`)?.focus();
+    return;
+  }
+  const choice=e.target.closest('[data-person]');
+  if(choice){
+    const {task,role,person}=choice.dataset;
+    assignPerson(task,role,person);
+    render();
+    root.querySelector(`[data-task="${task}"][data-role="${role}"][aria-pressed=true]`)?.focus();
+    return;
+  }
+  const a=e.target.closest('[data-action]')?.dataset.action;if(!a)return;if(a==='back'){
+    if(state.step===0)state.view='attendance';
+    else state.step--;
+  }
+  if(a==='finish-attendance'){
+    for(const [assignment,role] of unavailableAssignments())assignment[role]='ーー';
+    state.view='wizard';
+  }if(a==='next'){if(state.step<units.length-1)state.step++;else state.view='review';}if(a==='review'||a==='edit')state.view='review';if(a==='resume')state.view='wizard';if(a==='save'){save();return;}render();});
+ root.addEventListener('change',e=>{if(e.target.matches('[data-edit]')){assignPerson(e.target.dataset.id,e.target.dataset.edit,e.target.value);const oldFocus={id:e.target.dataset.id,role:e.target.dataset.edit};render();root.querySelector(`[data-id="${oldFocus.id}"][data-edit="${oldFocus.role}"]`)?.focus();}});
+ function uniqueAttendance(attendance=emptyAttendance()){
+  const assigned=new Set();
+  return attendance.map((list,index)=>index===frontIndex?list:list.filter(person=>{
+    if(assigned.has(person))return false;
+    assigned.add(person);
+    return true;
+  }));
+ }
+ function renderMonitorSignIn(){
+  main.innerHTML='<button type="button" class="aw-primary">Googleでログインして担当表を開く</button>';
+  main.firstElementChild.addEventListener('click',()=>connect(availableDates()[0]));
+ }
+ if(monitor)renderMonitorSignIn();
+ else render();
+})();
+</script>
+
+</body></html>
