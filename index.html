@@ -1,8 +1,12 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>接客サービスの担当割り</title></head><body>
 <div id="assignee-wizard" aria-label="担当者選択プロトタイプ" style="box-sizing:border-box">
   <header>
-    <span class="aw-date-label" id="aw-date" hidden></span>
-    <span id="aw-status" role="status" hidden></span>
+    <div id="aw-header-title"></div>
+    <div class="aw-header-meta">
+      <span class="aw-date-label" id="aw-date" hidden></span>
+      <div id="aw-header-actions"></div>
+      <span id="aw-status" role="status" hidden></span>
+    </div>
   </header>
   <div id="aw-content"></div>
 </div>
@@ -167,7 +171,46 @@
   background:var(--aw-fill);
 }
 #assignee-wizard .aw-attendance [data-attendee] small{display:block;font-size:11px}
-#assignee-wizard .aw-error{color:var(--aw-ink);background:var(--aw-edit);padding:10px 12px}</style>
+#assignee-wizard .aw-error{color:var(--aw-ink);background:var(--aw-edit);padding:10px 12px}
+#assignee-wizard[data-layout=tablet]{display:grid;height:clamp(420px,calc(100dvh - 16px),640px);grid-template-rows:108px minmax(0,1fr);color-scheme:light dark}
+#assignee-wizard[data-layout=tablet][data-day=tomorrow]{--aw-bg:light-dark(#fff,#1c2430);--aw-ink:light-dark(#142d4a,#edf5ff);--aw-muted:light-dark(#425d79,#b3c7df);--aw-line:light-dark(#becfe3,#526a89);--aw-fill:light-dark(#edf4fc,#27384d);--aw-green:light-dark(#1e528d,#a8ceff);--aw-on:light-dark(#fff,#112a47)}
+#assignee-wizard[data-layout=tablet] header{display:grid;width:auto;grid-template-columns:minmax(0,1fr) auto;justify-content:stretch;align-items:start;padding:14px 22px}
+#assignee-wizard[data-layout=tablet] header h3{margin:0;font-size:30px;font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+#assignee-wizard .aw-header-meta{display:grid;justify-items:end;gap:5px}
+#assignee-wizard .aw-header-meta :empty:not(#aw-date){display:none}
+#assignee-wizard[data-layout=tablet] .aw-date-label{min-height:0;white-space:nowrap}
+#assignee-wizard[data-layout=tablet] .aw-step{display:block;margin-top:5px;font-size:15px}
+#assignee-wizard[data-layout=tablet] #aw-content{display:grid;grid-template-rows:minmax(0,1fr) 92px;padding:0}
+#assignee-wizard[data-layout=tablet] .aw-edit-body{overflow:auto;min-width:0;padding:22px}
+#assignee-wizard[data-layout=tablet] .aw-attendance{grid-template-columns:minmax(152px,1fr) minmax(0,3.2fr)}
+#assignee-wizard[data-layout=tablet] .aw-shifts{align-content:start;gap:8px}
+#assignee-wizard[data-layout=tablet] .aw-shifts button{min-height:62px}
+#assignee-wizard[data-layout=tablet] .aw-floor-grid{max-width:none;width:100%;margin:0;grid-template-columns:repeat(2,minmax(0,1fr))}
+#assignee-wizard[data-layout=tablet] .aw-names{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#assignee-wizard[data-layout=tablet] .aw-attendance .aw-names{grid-template-columns:repeat(5,minmax(0,1fr))}
+#assignee-wizard[data-layout=tablet] .aw-names button{min-height:84px;font-size:23px;font-weight:650}
+#assignee-wizard[data-layout=tablet] .aw-person-panel h4{font-size:21px;margin:0 0 12px;padding:6px 10px;background:var(--aw-fill)}
+#assignee-wizard[data-layout=tablet] .aw-attendance [data-attendee] small{font-size:14px}
+#assignee-wizard[data-layout=tablet] .aw-floor-table td{padding:3px}
+#assignee-wizard[data-layout=tablet] .aw-floor-table button{min-height:48px}
+#assignee-wizard[data-layout=tablet][data-day=tomorrow] .aw-floor-table[data-role=sub],#assignee-wizard[data-layout=tablet][data-day=tomorrow] .aw-floor-table + .aw-person-panel[data-role=sub]{--aw-role-bg:light-dark(#c6dff8,#456d97);--aw-role-ink:light-dark(#142d4a,#fff)}
+#assignee-wizard[data-layout=tablet] .aw-footer,#assignee-wizard[data-layout=tablet] .aw-attendance-footer{grid-column:1;margin:0;padding:12px 22px;background:var(--aw-fill)}
+#assignee-wizard[data-layout=tablet] .aw-footer .aw-primary,#assignee-wizard[data-layout=tablet] .aw-attendance-footer .aw-primary{min-height:62px;min-inline-size:210px;font-size:20px;font-weight:650}
+#assignee-wizard[data-layout=tablet] .aw-footer .aw-progress{gap:clamp(3px,.55vw,6px);min-width:0}
+@media(max-width:650px){
+ #assignee-wizard[data-layout=tablet]{height:clamp(420px,calc(100dvh - 16px),900px);grid-template-rows:150px minmax(0,1fr)}
+ #assignee-wizard[data-layout=tablet] header,#assignee-wizard[data-layout=tablet] .aw-edit-body{padding:14px}
+ #assignee-wizard[data-layout=tablet] header h3{font-size:22px}
+ #assignee-wizard[data-layout=tablet] .aw-attendance,#assignee-wizard[data-layout=tablet] .aw-floor-grid{grid-template-columns:1fr}
+ #assignee-wizard[data-layout=tablet] .aw-shifts{grid-template-columns:repeat(auto-fit,minmax(105px,1fr))}
+ #assignee-wizard[data-layout=tablet] .aw-attendance .aw-names{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #assignee-wizard[data-layout=tablet] .aw-names button{min-height:60px;font-size:20px}
+ #assignee-wizard[data-layout=tablet] .aw-footer{padding:5px 14px;grid-template-columns:auto 1fr;grid-template-rows:62px 12px;row-gap:3px}
+ #assignee-wizard[data-layout=tablet] .aw-footer .aw-primary{grid-row:1;grid-column:2;justify-self:end;min-inline-size:0}
+ #assignee-wizard[data-layout=tablet] .aw-footer .aw-progress{grid-row:2;grid-column:1/-1;justify-self:center}
+ #assignee-wizard[data-layout=tablet] .aw-attendance-footer{padding:8px 14px}
+}
+</style>
 <script id="aw-source" type="application/json">{"tasks":[{"id":"task-13","group":"ミーティング前の業務","name":"朝刊"},{"id":"task-14","group":"ミーティング前の業務","name":"パントリー掃除"},{"id":"task-15","group":"ミーティング前の業務","name":"アメニティ補充"},{"id":"task-16","group":"ミーティング前の業務","name":"おしぼり補充"},{"id":"task-17","group":"ミーティング前の業務","name":"風呂そうじ"},{"id":"task-18","group":"ミーティング前の業務","name":"ベッドメイク"},{"id":"task-20","group":"共通業務","name":"庭園入口清掃"},{"id":"task-21","group":"共通業務","name":"つくばい掃除"},{"id":"task-22","group":"共通業務","name":"ロクシタン補充"},{"id":"task-23","group":"共通業務","name":"ラウンジ準備"},{"id":"task-24","group":"共通業務","name":"ドリンク補充"},{"id":"task-25","group":"共通業務","name":"化粧水補充"},{"id":"floor-13-27","group":"リネン","name":"1階 リネン"},{"id":"floor-13-34","group":"ベッドメイク","name":"1階 ベッドメイク"},{"id":"floor-13-41","group":"客室点検","name":"1階 客室点検"},{"id":"floor-14-27","group":"リネン","name":"2階 リネン"},{"id":"floor-14-34","group":"ベッドメイク","name":"2階 ベッドメイク"},{"id":"floor-14-41","group":"客室点検","name":"2階 客室点検"},{"id":"floor-15-27","group":"リネン","name":"3階 リネン"},{"id":"floor-15-34","group":"ベッドメイク","name":"3階 ベッドメイク"},{"id":"floor-15-41","group":"客室点検","name":"3階 客室点検"},{"id":"floor-16-27","group":"リネン","name":"4階 リネン"},{"id":"floor-16-34","group":"ベッドメイク","name":"4階 ベッドメイク"},{"id":"floor-16-41","group":"客室点検","name":"4階 客室点検"},{"id":"floor-17-27","group":"リネン","name":"5階 リネン"},{"id":"floor-17-34","group":"ベッドメイク","name":"5階 ベッドメイク"},{"id":"floor-17-41","group":"客室点検","name":"5階 客室点検"},{"id":"floor-18-27","group":"リネン","name":"6階 リネン"},{"id":"floor-18-34","group":"ベッドメイク","name":"6階 ベッドメイク"},{"id":"floor-18-41","group":"客室点検","name":"6階 客室点検"},{"id":"clean-21","group":"清掃業務","name":"快活楼"},{"id":"common-21","group":"共通業務","name":"お茶出し"},{"id":"clean-22","group":"清掃業務","name":"錦旗"},{"id":"common-22","group":"共通業務","name":"客室案内"},{"id":"clean-23","group":"清掃業務","name":"花柏の湯"},{"id":"common-23","group":"共通業務","name":"朝お見送り"},{"id":"clean-24","group":"清掃業務","name":"維新の湯"}],"people":[],"front":[]}</script>
 <script src="config.js"></script>
 <script>
@@ -189,6 +232,8 @@
  let state={step:0,view:'start',date:null,draft:empty(),attendance:emptyAttendance(),saved:null};
  const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const main=root.querySelector('#aw-content');const date=root.querySelector('#aw-date');const status=root.querySelector('#aw-status');
+ const headerTitle=root.querySelector('#aw-header-title');
+ const headerActions=root.querySelector('#aw-header-actions');
  let monitor=new URLSearchParams(location.search).get('view')==='monitor';
  const {clientId,apiUrl}=window.assignmentConfig||{};
  const rememberedKey='service-assignment-registration';
@@ -256,15 +301,19 @@
  let revision=null;
  function showError(error){
   busy=false;
-  if(!session)renderSignIn();
+  if(!session){
+    root.dataset.layout='';
+    renderSignIn();
+  }
   else render();
   const alert=document.createElement('p');
   alert.className='aw-error';
   alert.setAttribute('role','alert');
   alert.textContent=error?.message||'通信に失敗しました。再度お試しください。';
-  main.prepend(alert);
+  (main.querySelector('.aw-edit-body')??main).prepend(alert);
  }
  function connect(date){
+  root.dataset.day=date===availableDates()[1]?'tomorrow':'today';
   busy=true;
   render();
   request('load',{date}).then(result=>{
@@ -361,7 +410,7 @@
   const [label,limit]=shifts[activeShift];
   const selected=state.attendance[activeShift];
   const roster=activeShift===frontIndex?data.front:data.people;
-  main.innerHTML=`<h3 class="aw-start-title">出勤者を選ぶ</h3>
+  main.innerHTML=`<div class="aw-edit-body">
     <div class="aw-attendance">
       <div class="aw-shifts" aria-label="勤務区分">${shifts.map(([name,capacity],index)=>`
         <button type="button" data-shift="${index}" aria-pressed="${activeShift===index}"><strong>${name}</strong><span>${state.attendance[index].length} / ${capacity}名</span></button>
@@ -370,19 +419,23 @@
         const checked=selected.includes(person);
         const other=otherServiceShift(person);
         const disabled=other>=0||(!checked&&selected.length>=limit);
-        const detail=other>=0?`<small>${shifts[other][0]}で選択済み</small>`:'';
+        const detail=other>=0?`<small>${shifts[other][0]}で選択済</small>`:'';
         return `<button type="button" data-attendee="${index}" aria-pressed="${checked}" ${disabled?'disabled':''}>${esc(person)}${detail}</button>`;
       }).join('')}</div></section>
-    </div>
+    </div></div>
     <div class="aw-attendance-footer">${unavailableAssignments().length?'<span>出勤者から外れた方の担当は「ーー」に戻ります。</span>':''}<button type="button" class="aw-primary" data-action="finish-attendance">業務の担当割りへ</button></div>`;
  }
  function render(){
   const board=monitor;
   root.dataset.mode=board?'board':'input';
+  root.dataset.layout=!board&&state.date?'tablet':'';
+  headerTitle.textContent='';
+  headerActions.textContent='';
   status.hidden=!board;
   const shownDate=(board?state.saved?.date:null)??state.date;
   date.hidden=!shownDate;
-  date.textContent=shownDate?'対象日 '+shownDate.replaceAll('-','/'):'';
+  const dayLabel=board?'対象日':root.dataset.day==='tomorrow'?'明日':'本日';
+  date.textContent=shownDate?dayLabel+'　'+shownDate.replaceAll('-','/'):'';
   date.closest('header').hidden=!board&&!shownDate;
   if(busy){main.innerHTML='<p role="status">処理中です…</p>';return;}
   if(board){
@@ -393,9 +446,25 @@
     return;
   }
   if(state.view==='start'){renderStart();return;}
-  if(state.view==='attendance'){renderAttendance();return;}
- if(state.view==='wizard'){const t=units[state.step];main.innerHTML=`<div class="aw-heading"><span class="aw-step" aria-live="polite">${esc(t.group)} <strong class="aw-step-count">${state.step+1} / ${units.length}</strong></span><button type="button" data-action="review">一覧で確認・修正</button></div><h3 class="aw-task-title">${esc(t.name)}</h3><div class="aw-floor-grid">${assignmentControls(t)}</div><div class="aw-footer"><button type="button" data-action="back">前へ</button>${stepMarkers()}<button type="button" class="aw-primary" data-action="next">${state.step===units.length-1?'決定して一覧へ':'決定して次へ'}</button></div>`;
- }else{const saved=state.view==='saved';const unassigned=tasks.filter(t=>(saved?state.saved.assignments:state.draft)[t.id].main==='ーー').length;main.innerHTML=`${saved?'<div class="aw-saved"><strong>スプレッドシートに保存しました</strong></div>':''}<div class="aw-heading"><div><h3 style="margin:0;font-size:21px">${saved?'確定後の担当表':'担当一覧の確認・修正'}</h3><span class="aw-step">${tasks.length}業務　／　主担当未選択 ${unassigned}件</span></div><div class="aw-actions">${saved?'<button type="button" data-action="edit">一覧を修正</button>':'<button type="button" data-action="resume">担当入力に戻る</button><button type="button" class="aw-primary" data-action="save">担当を確定</button>'}</div></div><div class="aw-review">${[groups.slice(0,2),groups.slice(2)].map(gs=>`<div>${gs.map(g=>`<section class="aw-section"><h4>${esc(g)}</h4>${table(tasks.filter(t=>t.group===g),!saved)}</section>`).join('')}</div>`).join('')}</div>`;}}
+  if(state.view==='attendance'){
+    headerTitle.innerHTML='<h3>出勤者を選ぶ</h3><span class="aw-step">担当割りの準備</span>';
+    renderAttendance();
+    return;
+  }
+  if(state.view==='wizard'){
+    const unit=units[state.step];
+    headerTitle.innerHTML=`<h3>${esc(unit.name)}</h3><span class="aw-step" aria-live="polite">${esc(unit.group)} <strong class="aw-step-count">${state.step+1} / ${units.length}</strong></span>`;
+    headerActions.innerHTML='<button type="button" data-action="review">一覧で確認・修正</button>';
+    main.innerHTML=`<div class="aw-edit-body"><div class="aw-floor-grid">${assignmentControls(unit)}</div></div><div class="aw-footer"><button type="button" data-action="back">前へ</button>${stepMarkers()}<button type="button" class="aw-primary" data-action="next">${state.step===units.length-1?'決定して一覧へ':'決定して次へ'}</button></div>`;
+    return;
+  }
+  const saved=state.view==='saved';
+  const assignments=saved?state.saved.assignments:state.draft;
+  const unassigned=tasks.filter(task=>assignments[task.id].main==='ーー').length;
+  headerTitle.innerHTML=`<h3>${saved?'確定後の担当表':'担当一覧'}</h3><span class="aw-step">${saved?'保存済':'確認・修正'}</span>`;
+  headerActions.innerHTML=saved?'<button type="button" data-action="edit">一覧を修正</button>':'<button type="button" data-action="resume">担当選択に戻る</button>';
+  main.innerHTML=`<div class="aw-edit-body">${saved?'<div class="aw-saved"><strong>スプレッドシートに保存しました</strong></div>':''}<p>${tasks.length}業務　／　主担当未選択 ${unassigned}件</p><div class="aw-review">${[groups.slice(0,2),groups.slice(2)].map(gs=>`<div>${gs.map(group=>`<section class="aw-section"><h4>${esc(group)}</h4>${table(tasks.filter(task=>task.group===group),!saved)}</section>`).join('')}</div>`).join('')}</div></div><div class="aw-attendance-footer">${saved?'':'<button type="button" class="aw-primary" data-action="save">担当を確定</button>'}</div>`;
+ }
  root.addEventListener('click',e=>{
   const start=e.target.closest('[data-start]');
   if(start&&state.view==='start'){
