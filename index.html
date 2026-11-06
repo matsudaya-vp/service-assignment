@@ -191,7 +191,21 @@
  const main=root.querySelector('#aw-content');const date=root.querySelector('#aw-date');const status=root.querySelector('#aw-status');
  let monitor=new URLSearchParams(location.search).get('view')==='monitor';
  const {clientId,apiUrl}=window.assignmentConfig||{};
- let session=null;
+ const rememberedKey='service-assignment-registration';
+ let session=readRegistration();
+ function readRegistration(){
+  try {
+   const saved=JSON.parse(localStorage.getItem(rememberedKey)||'null');
+   return saved?.expires>Date.now()&&typeof saved.session==='string'?saved.session:null;
+  } catch (_) { return null; }
+ }
+ function rememberRegistration(registration){
+  session=registration?.session||null;
+  try {
+   if(session)localStorage.setItem(rememberedKey,JSON.stringify(registration));
+   else localStorage.removeItem(rememberedKey);
+  } catch (_) {}
+ }
  const oauthStateKey='assignment-oauth-request';
  const redirectUri=location.origin+location.pathname;
  const base64url=bytes=>btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -203,8 +217,7 @@
   sessionStorage.setItem(oauthStateKey,JSON.stringify({state,verifier,monitor}));
   const params=new URLSearchParams({
    client_id:clientId,redirect_uri:redirectUri,response_type:'code',
-   scope:'openid email',state,code_challenge:challenge,code_challenge_method:'S256',
-   prompt:'select_account'
+   scope:'openid email',state,code_challenge:challenge,code_challenge_method:'S256'
   });
   location.assign('https://accounts.google.com/o/oauth2/v2/auth?'+params);
  }
@@ -216,7 +229,8 @@
   });
   if(!response.ok)throw new Error('接続に失敗しました。もう一度お試しください。');
   const result=await response.json();
-  if(result.code==='SIGN_IN')session=null;
+  if(result.code==='SIGN_IN')rememberRegistration(null);
+  if(result.registration)rememberRegistration(result.registration);
   if(!result.ok)throw new Error(result.message||'処理できませんでした。');
   return result.data;
  }
@@ -234,7 +248,7 @@
   }
   main.textContent='Googleアカウントを確認しています…';
   const result=await request('login',{code:params.get('code'),verifier:previous.verifier});
-  session=result.session;
+  rememberRegistration(result);
   if(monitor)connect(availableDates()[0]);
   else render();
  }
@@ -242,7 +256,7 @@
  let revision=null;
  function showError(error){
   busy=false;
-  if(!session&&!state.date)renderSignIn();
+  if(!session)renderSignIn();
   else render();
   const alert=document.createElement('p');
   alert.className='aw-error';
@@ -443,7 +457,9 @@
  }
  const params=new URLSearchParams(location.search);
  if(params.has('code')||params.has('error'))completeSignIn(params).catch(showError);
- else renderSignIn();
+ else if(!session)renderSignIn();
+ else if(monitor)connect(availableDates()[0]);
+ else render();
 })();
 </script>
 
