@@ -1,1 +1,1 @@
-window.assignmentConfig = {clientId: "", apiUrl: ""};
+window.assignmentConfig = {clientId: "67624367407-1v41hbn3t1paa3vgs01v3n662a04vvfa.apps.googleusercontent.com", apiUrl: "https://script.google.com/macros/s/AKfycbzhoY6tIEZzFpPAONzfDnn7F7PFu06o_xPqfCq3Ot_ereBqryArSwYlnes2JJELm_Id0Q/exec"};

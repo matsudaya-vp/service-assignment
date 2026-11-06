@@ -169,6 +169,7 @@
 #assignee-wizard .aw-attendance [data-attendee] small{display:block;font-size:11px}
 #assignee-wizard .aw-error{color:var(--aw-ink);background:var(--aw-edit);padding:10px 12px}</style>
 <script id="aw-source" type="application/json">{"tasks":[{"id":"task-13","group":"ミーティング前の業務","name":"朝刊"},{"id":"task-14","group":"ミーティング前の業務","name":"パントリー掃除"},{"id":"task-15","group":"ミーティング前の業務","name":"アメニティ補充"},{"id":"task-16","group":"ミーティング前の業務","name":"おしぼり補充"},{"id":"task-17","group":"ミーティング前の業務","name":"風呂そうじ"},{"id":"task-18","group":"ミーティング前の業務","name":"ベッドメイク"},{"id":"task-20","group":"共通業務","name":"庭園入口清掃"},{"id":"task-21","group":"共通業務","name":"つくばい掃除"},{"id":"task-22","group":"共通業務","name":"ロクシタン補充"},{"id":"task-23","group":"共通業務","name":"ラウンジ準備"},{"id":"task-24","group":"共通業務","name":"ドリンク補充"},{"id":"task-25","group":"共通業務","name":"化粧水補充"},{"id":"floor-13-27","group":"リネン","name":"1階 リネン"},{"id":"floor-13-34","group":"ベッドメイク","name":"1階 ベッドメイク"},{"id":"floor-13-41","group":"客室点検","name":"1階 客室点検"},{"id":"floor-14-27","group":"リネン","name":"2階 リネン"},{"id":"floor-14-34","group":"ベッドメイク","name":"2階 ベッドメイク"},{"id":"floor-14-41","group":"客室点検","name":"2階 客室点検"},{"id":"floor-15-27","group":"リネン","name":"3階 リネン"},{"id":"floor-15-34","group":"ベッドメイク","name":"3階 ベッドメイク"},{"id":"floor-15-41","group":"客室点検","name":"3階 客室点検"},{"id":"floor-16-27","group":"リネン","name":"4階 リネン"},{"id":"floor-16-34","group":"ベッドメイク","name":"4階 ベッドメイク"},{"id":"floor-16-41","group":"客室点検","name":"4階 客室点検"},{"id":"floor-17-27","group":"リネン","name":"5階 リネン"},{"id":"floor-17-34","group":"ベッドメイク","name":"5階 ベッドメイク"},{"id":"floor-17-41","group":"客室点検","name":"5階 客室点検"},{"id":"floor-18-27","group":"リネン","name":"6階 リネン"},{"id":"floor-18-34","group":"ベッドメイク","name":"6階 ベッドメイク"},{"id":"floor-18-41","group":"客室点検","name":"6階 客室点検"},{"id":"clean-21","group":"清掃業務","name":"快活楼"},{"id":"common-21","group":"共通業務","name":"お茶出し"},{"id":"clean-22","group":"清掃業務","name":"錦旗"},{"id":"common-22","group":"共通業務","name":"客室案内"},{"id":"clean-23","group":"清掃業務","name":"花柏の湯"},{"id":"common-23","group":"共通業務","name":"朝お見送り"},{"id":"clean-24","group":"清掃業務","name":"維新の湯"}],"people":[],"front":[]}</script>
+<script src="config.js"></script>
 <script>
 (()=>{
  const root=document.getElementById('assignee-wizard');const data=JSON.parse(document.getElementById('aw-source').textContent);const tasks=data.tasks;const empty=()=>Object.fromEntries(tasks.map(t=>[t.id,{main:'ーー',sub:'ーー'}]));
@@ -188,42 +189,60 @@
  let state={step:0,view:'start',date:null,draft:empty(),attendance:emptyAttendance(),saved:null};
  const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const main=root.querySelector('#aw-content');const date=root.querySelector('#aw-date');const status=root.querySelector('#aw-status');
- const monitor=new URLSearchParams(location.search).get('view')==='monitor';
- const gasUrl='https://script.google.com/macros/s/AKfycbyjObIoN66ptMelBfHfaG_3_rONXh3CKwiBdTfamW163bsCcZ_DW_96Iz8zFRr_fgtB0A/exec';
- function request(action,payload){
-  return new Promise((resolve,reject)=>{
-   const nonce=crypto.randomUUID();
-   const popup=window.open(gasUrl+'?bridge='+encodeURIComponent(nonce),'assignment-bridge-'+nonce,'popup,width=560,height=650');
-   if(!popup){reject(new Error('ブラウザでポップアップを許可し、もう一度お試しください。'));return;}
-   let bridge=null;
-   const finish=(error,data)=>{
-    clearInterval(watch);
-    removeEventListener('message',receive);
-    if(!popup.closed)popup.close();
-    if(error)reject(error);
-    else resolve(data);
-   };
-   function receive(event){
-    const message=event.data;
-    if(message?.nonce!==nonce||!/^https:\/\/[a-z0-9.-]*script\.googleusercontent\.com$/.test(event.origin)||event.source?.top!==popup)return;
-    if(message.type==='ready'&&!bridge){
-     bridge=event.source;
-     bridge.postMessage({action,payload,nonce},event.origin);
-    }else if(message.type==='result'&&event.source===bridge){
-     finish(message.ok?null:new Error(message.message||'処理できませんでした。'),message.data);
-    }
-   }
-   const deadline=Date.now()+180000;
-   const watch=setInterval(()=>{
-    if(popup.closed||Date.now()>deadline)finish(new Error('Googleの接続が完了しませんでした。もう一度お試しください。'));
-   },400);
-   addEventListener('message',receive);
+ let monitor=new URLSearchParams(location.search).get('view')==='monitor';
+ const {clientId,apiUrl}=window.assignmentConfig||{};
+ let session=null;
+ const oauthStateKey='assignment-oauth-request';
+ const redirectUri=location.origin+location.pathname;
+ const base64url=bytes=>btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+ const randomKey=()=>base64url(crypto.getRandomValues(new Uint8Array(32)));
+ async function beginSignIn(){
+  if(!clientId||!apiUrl)throw new Error('Googleログインの設定を確認してください。');
+  const state=randomKey(), verifier=randomKey();
+  const challenge=base64url(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))));
+  sessionStorage.setItem(oauthStateKey,JSON.stringify({state,verifier,monitor}));
+  const params=new URLSearchParams({
+   client_id:clientId,redirect_uri:redirectUri,response_type:'code',
+   scope:'openid email',state,code_challenge:challenge,code_challenge_method:'S256',
+   prompt:'select_account'
   });
- } let busy=false;
+  location.assign('https://accounts.google.com/o/oauth2/v2/auth?'+params);
+ }
+ async function request(action,payload){
+  const response=await fetch(apiUrl,{
+   method:'POST',credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer',
+   body:JSON.stringify({action,payload,session}),
+   signal:AbortSignal.timeout(30000)
+  });
+  if(!response.ok)throw new Error('接続に失敗しました。もう一度お試しください。');
+  const result=await response.json();
+  if(result.code==='SIGN_IN')session=null;
+  if(!result.ok)throw new Error(result.message||'処理できませんでした。');
+  return result.data;
+ }
+ function renderSignIn(){
+  main.innerHTML='<button type="button" class="aw-primary">Googleでログイン</button>';
+  main.firstElementChild.addEventListener('click',()=>beginSignIn().catch(showError));
+ }
+ async function completeSignIn(params){
+  const previous=JSON.parse(sessionStorage.getItem(oauthStateKey)||'null');
+  sessionStorage.removeItem(oauthStateKey);
+  monitor=previous?.monitor===true;
+  history.replaceState(null,'',redirectUri+(monitor?'?view=monitor':''));
+  if(!previous||!params.get('code')||params.get('state')!==previous.state){
+   throw new Error('Googleログインをやり直してください。');
+  }
+  main.textContent='Googleアカウントを確認しています…';
+  const result=await request('login',{code:params.get('code'),verifier:previous.verifier});
+  session=result.session;
+  if(monitor)connect(availableDates()[0]);
+  else render();
+ }
+ let busy=false;
  let revision=null;
  function showError(error){
   busy=false;
-  if(monitor&&!state.date)renderMonitorSignIn();
+  if(!session&&!state.date)renderSignIn();
   else render();
   const alert=document.createElement('p');
   alert.className='aw-error';
@@ -422,12 +441,9 @@
     return true;
   }));
  }
- function renderMonitorSignIn(){
-  main.innerHTML='<button type="button" class="aw-primary">Googleでログインして担当表を開く</button>';
-  main.firstElementChild.addEventListener('click',()=>connect(availableDates()[0]));
- }
- if(monitor)renderMonitorSignIn();
- else render();
+ const params=new URLSearchParams(location.search);
+ if(params.has('code')||params.has('error'))completeSignIn(params).catch(showError);
+ else renderSignIn();
 })();
 </script>
 
