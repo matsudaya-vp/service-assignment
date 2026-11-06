@@ -9,6 +9,14 @@
     </div>
   </header>
   <div id="aw-content"></div>
+  <dialog id="aw-return-dialog" aria-labelledby="aw-return-title">
+    <h3 id="aw-return-title">未保存の変更があります</h3>
+    <p>変更を破棄してトップへ戻りますか？</p>
+    <div class="aw-actions">
+      <button type="button" data-action="cancel-home" autofocus>入力を続ける</button>
+      <button type="button" data-action="discard-home">変更を破棄して戻る</button>
+    </div>
+  </dialog>
 </div>
 <style>
 #assignee-wizard{--aw-bg:light-dark(#fff,#202824);--aw-ink:light-dark(#233d31,#edf5ef);--aw-muted:light-dark(#55685d,#b5c8bb);--aw-line:light-dark(#cedbd2,#52665a);--aw-fill:light-dark(#f1f6f2,#2c3c32);--aw-green:light-dark(#26553c,#b3d5bd);--aw-on:light-dark(#fff,#163222);--aw-edit:light-dark(#fff8e6,#453e2d);font:15px/1.5 'Yu Gothic UI',Meiryo,sans-serif;color:var(--aw-ink);background:var(--aw-bg);width:100%;border:1px solid var(--aw-line)}
@@ -153,9 +161,22 @@
 #assignee-wizard header[hidden],#assignee-wizard .aw-date-label[hidden]{display:none}
 #assignee-wizard .aw-date-label{min-height:44px;font-size:16px}
 #assignee-wizard .aw-start-title{margin:0 0 16px;font-weight:700}
-#assignee-wizard .aw-start-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:480px}
-#assignee-wizard .aw-start-options button{display:grid;gap:4px;min-height:80px;padding:8px;background:var(--aw-fill)}
-#assignee-wizard .aw-start-options strong{font-size:20px;color:var(--aw-green)}
+#assignee-wizard .aw-home{width:min(100%,880px);min-height:clamp(360px,calc(100dvh - 56px),640px);margin:auto;display:grid;align-content:center;gap:24px}
+#assignee-wizard .aw-home section+section{border-top:1px solid var(--aw-line);padding-top:24px}
+#assignee-wizard .aw-home h3{margin:0 0 12px;font-size:22px;font-weight:700}
+#assignee-wizard .aw-start-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,3vw,32px)}
+#assignee-wizard .aw-start-options button{display:grid;place-content:center;gap:4px;min-height:100px;padding:8px;font-size:19px;border-color:var(--day-edge)}
+#assignee-wizard .aw-start-options strong{font-size:25px}
+#assignee-wizard [data-start][data-start-day=today]{--day-fill:light-dark(#204f38,#204f38);--day-soft:light-dark(#d9edde,#263e30);--day-ink:light-dark(#153725,#e3f6e9);--day-edge:light-dark(#58816a,#8eb49b)}
+#assignee-wizard [data-start][data-start-day=tomorrow]{--day-fill:light-dark(#1e528d,#1e528d);--day-soft:light-dark(#dbedfa,#263c55);--day-ink:light-dark(#143a57,#e5f1ff);--day-edge:light-dark(#547da2,#8daed0)}
+#assignee-wizard [data-start][data-intent=assign]{background:var(--day-fill);color:#fff}
+#assignee-wizard [data-start][data-intent=view]{background:var(--day-soft);color:var(--day-ink)}
+#assignee-wizard #aw-header-actions{display:flex;justify-content:flex-end;gap:8px}
+#assignee-wizard #aw-header-actions:empty{display:none}
+#assignee-wizard #aw-return-dialog{max-width:min(440px,calc(100% - 24px));padding:22px;border:1px solid var(--aw-line);border-radius:10px;color:var(--aw-ink);background:var(--aw-bg)}
+#assignee-wizard #aw-return-dialog::backdrop{background:#0008}
+#assignee-wizard #aw-return-dialog h3{margin:0 0 12px;font-size:22px}
+@media(max-width:650px){#assignee-wizard #aw-header-actions{flex-direction:column;align-items:flex-end;gap:4px}#assignee-wizard #aw-header-actions button{padding-inline:8px}}
 #assignee-wizard .aw-attendance{display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,3fr);gap:16px}
 #assignee-wizard .aw-shifts{display:grid;gap:6px}
 #assignee-wizard .aw-shifts button{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px}
@@ -198,7 +219,7 @@
 #assignee-wizard[data-layout=tablet] .aw-footer .aw-primary,#assignee-wizard[data-layout=tablet] .aw-attendance-footer .aw-primary{min-height:62px;min-inline-size:210px;font-size:20px;font-weight:650}
 #assignee-wizard[data-layout=tablet] .aw-footer .aw-progress{gap:clamp(3px,.55vw,6px);min-width:0}
 @media(max-width:650px){
- #assignee-wizard[data-layout=tablet]{height:clamp(420px,calc(100dvh - 16px),900px);grid-template-rows:150px minmax(0,1fr)}
+ #assignee-wizard[data-layout=tablet]{height:clamp(420px,calc(100dvh - 16px),900px);grid-template-rows:164px minmax(0,1fr)}
  #assignee-wizard[data-layout=tablet] header,#assignee-wizard[data-layout=tablet] .aw-edit-body{padding:14px}
  #assignee-wizard[data-layout=tablet] header h3{font-size:22px}
  #assignee-wizard[data-layout=tablet] .aw-attendance,#assignee-wizard[data-layout=tablet] .aw-floor-grid{grid-template-columns:1fr}
@@ -234,6 +255,7 @@
  const main=root.querySelector('#aw-content');const date=root.querySelector('#aw-date');const status=root.querySelector('#aw-status');
  const headerTitle=root.querySelector('#aw-header-title');
  const headerActions=root.querySelector('#aw-header-actions');
+ const returnDialog=root.querySelector('#aw-return-dialog');
  let monitor=new URLSearchParams(location.search).get('view')==='monitor';
  const {clientId,apiUrl}=window.assignmentConfig||{};
  const rememberedKey='service-assignment-registration';
@@ -299,6 +321,18 @@
  }
  let busy=false;
  let revision=null;
+ let savedInput='';
+ const inputSnapshot=()=>JSON.stringify([state.attendance,state.draft]);
+ const homeButton='<button type="button" data-action="home">トップへ戻る</button>';
+ function returnHome(){
+  state={step:0,view:'start',date:null,draft:empty(),attendance:emptyAttendance(),saved:null};
+  savedInput='';
+  revision=null;
+  target=null;
+  activeShift=0;
+  render();
+  main.querySelector('[data-start]')?.focus();
+ }
  function showError(error){
   busy=false;
   if(!session){
@@ -312,7 +346,7 @@
   alert.textContent=error?.message||'通信に失敗しました。再度お試しください。';
   (main.querySelector('.aw-edit-body')??main).prepend(alert);
  }
- function connect(date){
+ function connect(date,intent='assign'){
   root.dataset.day=date===availableDates()[1]?'tomorrow':'today';
   busy=true;
   render();
@@ -325,7 +359,9 @@
     });
     units=makeUnits();
     revision=result.revision;
-    state={...state,date,step:0,view:'attendance',attendance:uniqueAttendance(result.attendance),draft:result.assignments};
+    state={...state,date,step:0,view:intent==='view'?'view':'attendance',directReview:intent==='view',attendance:uniqueAttendance(result.attendance),draft:result.assignments};
+    if(intent==='view')state.saved={date,assignments:structuredClone(state.draft)};
+    savedInput=inputSnapshot();
     busy=false;
     render();
   }).catch(showError);
@@ -338,6 +374,7 @@
   request('save',payload).then(result=>{
     revision=result.revision;
     state.saved={date:state.date,assignments:JSON.parse(JSON.stringify(state.draft))};
+    savedInput=inputSnapshot();
     state.view='saved';
     busy=false;
     render();
@@ -393,9 +430,10 @@
  }
  function renderStart(){
   const dates=availableDates();
-  main.innerHTML=`<h3 class="aw-start-title">対象日を選ぶ</h3><div class="aw-start-options">${['今日','明日'].map((label,index)=>`
-    <button type="button" data-start="${dates[index]}"><strong>${label}</strong><span>${dates[index].replaceAll('-','/')}</span></button>
-  `).join('')}</div>`;
+  const section=(intent,title)=>`<section aria-labelledby="aw-home-${intent}"><h3 id="aw-home-${intent}">${title}</h3><div class="aw-start-options">${['今日','明日'].map((label,index)=>`
+    <button type="button" data-start="${dates[index]}" data-start-day="${index?'tomorrow':'today'}" data-intent="${intent}" aria-label="${title}、${label} ${dates[index].replaceAll('-','/')}"><strong>${label}</strong><span>${dates[index].replaceAll('-','/')}</span></button>
+  `).join('')}</div></section>`;
+  main.innerHTML=`<div class="aw-home">${section('assign','担当を割り付ける')}${section('view','担当を確認する')}</div>`;
  }
  function unavailableAssignments(){
   const candidates=new Set(availablePeople());
@@ -448,29 +486,31 @@
   if(state.view==='start'){renderStart();return;}
   if(state.view==='attendance'){
     headerTitle.innerHTML='<h3>出勤者を選ぶ</h3><span class="aw-step">担当割りの準備</span>';
+    headerActions.innerHTML=homeButton;
     renderAttendance();
     return;
   }
   if(state.view==='wizard'){
     const unit=units[state.step];
     headerTitle.innerHTML=`<h3>${esc(unit.name)}</h3><span class="aw-step" aria-live="polite">${esc(unit.group)} <strong class="aw-step-count">${state.step+1} / ${units.length}</strong></span>`;
-    headerActions.innerHTML='<button type="button" data-action="review">一覧で確認・修正</button>';
+    headerActions.innerHTML=homeButton+'<button type="button" data-action="review">一覧で確認・修正</button>';
     main.innerHTML=`<div class="aw-edit-body"><div class="aw-floor-grid">${assignmentControls(unit)}</div></div><div class="aw-footer"><button type="button" data-action="back">前へ</button>${stepMarkers()}<button type="button" class="aw-primary" data-action="next">${state.step===units.length-1?'決定して一覧へ':'決定して次へ'}</button></div>`;
     return;
   }
   const saved=state.view==='saved';
-  const assignments=saved?state.saved.assignments:state.draft;
+  const readOnly=saved||state.view==='view';
+  const assignments=readOnly?state.saved.assignments:state.draft;
   const unassigned=tasks.filter(task=>assignments[task.id].main==='ーー').length;
-  headerTitle.innerHTML=`<h3>${saved?'確定後の担当表':'担当一覧'}</h3><span class="aw-step">${saved?'保存済':'確認・修正'}</span>`;
-  headerActions.innerHTML=saved?'<button type="button" data-action="edit">一覧を修正</button>':'<button type="button" data-action="resume">担当選択に戻る</button>';
-  main.innerHTML=`<div class="aw-edit-body">${saved?'<div class="aw-saved"><strong>スプレッドシートに保存しました</strong></div>':''}<p>${tasks.length}業務　／　主担当未選択 ${unassigned}件</p><div class="aw-review">${[groups.slice(0,2),groups.slice(2)].map(gs=>`<div>${gs.map(group=>`<section class="aw-section"><h4>${esc(group)}</h4>${table(tasks.filter(task=>task.group===group),!saved)}</section>`).join('')}</div>`).join('')}</div></div><div class="aw-attendance-footer">${saved?'':'<button type="button" class="aw-primary" data-action="save">担当を確定</button>'}</div>`;
+  headerTitle.innerHTML=`<h3>${saved?'確定後の担当表':'担当一覧'}</h3><span class="aw-step">${readOnly?'保存済みの担当':'確認・修正'}</span>`;
+  headerActions.innerHTML=homeButton+(readOnly?'<button type="button" data-action="edit">一覧を修正</button>':state.directReview?'':'<button type="button" data-action="resume">担当選択に戻る</button>');
+  main.innerHTML=`<div class="aw-edit-body">${saved?'<div class="aw-saved"><strong>スプレッドシートに保存しました</strong></div>':''}<p>${tasks.length}業務　／　主担当未選択 ${unassigned}件</p><div class="aw-review">${[groups.slice(0,2),groups.slice(2)].map(gs=>`<div>${gs.map(group=>`<section class="aw-section"><h4>${esc(group)}</h4>${table(tasks.filter(task=>task.group===group),!readOnly)}</section>`).join('')}</div>`).join('')}</div></div><div class="aw-attendance-footer">${readOnly?'':'<button type="button" class="aw-primary" data-action="save">担当を確定</button>'}</div>`;
  }
  root.addEventListener('click',e=>{
   const start=e.target.closest('[data-start]');
-  if(start&&state.view==='start'){
+  if(start&&state.view==='start'&&!busy){
     const chosen=start.dataset.start;
     if(!availableDates().includes(chosen)){renderStart();return;}
-    connect(chosen);
+    connect(chosen,start.dataset.intent);
     return;
   }
   const shift=e.target.closest('[data-shift]');
@@ -507,7 +547,19 @@
     root.querySelector(`[data-task="${task}"][data-role="${role}"][aria-pressed=true]`)?.focus();
     return;
   }
-  const a=e.target.closest('[data-action]')?.dataset.action;if(!a)return;if(a==='back'){
+  const a=e.target.closest('[data-action]')?.dataset.action;
+  if(!a||busy)return;
+  if(a==='home'){
+    if(inputSnapshot()===savedInput)returnHome();
+    else returnDialog.showModal();
+    return;
+  }
+  if(a==='cancel-home'||a==='discard-home'){
+    returnDialog.close();
+    if(a==='discard-home')returnHome();
+    return;
+  }
+  if(a==='back'){
     if(state.step===0)state.view='attendance';
     else state.step--;
   }
@@ -515,7 +567,15 @@
     for(const [assignment,role] of unavailableAssignments())assignment[role]='ーー';
     state.view='wizard';
   }if(a==='next'){if(state.step<units.length-1)state.step++;else state.view='review';}if(a==='review'||a==='edit')state.view='review';if(a==='resume')state.view='wizard';if(a==='save'){save();return;}render();});
- root.addEventListener('change',e=>{if(e.target.matches('[data-edit]')){assignPerson(e.target.dataset.id,e.target.dataset.edit,e.target.value);const oldFocus={id:e.target.dataset.id,role:e.target.dataset.edit};render();root.querySelector(`[data-id="${oldFocus.id}"][data-edit="${oldFocus.role}"]`)?.focus();}});
+ root.addEventListener('change',e=>{
+  if(!e.target.matches('[data-edit]'))return;
+  const {id,edit:role}=e.target.dataset;
+  const scrollTop=main.querySelector('.aw-edit-body').scrollTop;
+  assignPerson(id,role,e.target.value);
+  render();
+  main.querySelector('.aw-edit-body').scrollTop=scrollTop;
+  root.querySelector(`[data-id="${id}"][data-edit="${role}"]`)?.focus({preventScroll:true});
+ });
  function uniqueAttendance(attendance=emptyAttendance()){
   const assigned=new Set();
   return attendance.map((list,index)=>index===frontIndex?list:list.filter(person=>{
