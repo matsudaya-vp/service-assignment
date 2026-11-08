@@ -165,7 +165,7 @@
 #assignee-wizard .aw-home section+section{border-top:1px solid var(--aw-line);padding-top:24px}
 #assignee-wizard .aw-home h3{margin:0 0 12px;font-size:22px;font-weight:700}
 #assignee-wizard .aw-start-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,3vw,32px)}
-#assignee-wizard .aw-start-options button{display:grid;place-content:center;gap:4px;min-height:100px;padding:8px;font-size:19px;border-color:var(--day-edge)}
+#assignee-wizard .aw-start-options button{display:grid;place-content:center;gap:4px;min-height:120px;padding:8px;font-size:19px;border-color:var(--day-edge)}
 #assignee-wizard .aw-start-options strong{font-size:25px}
 #assignee-wizard [data-start][data-start-day=today]{--day-fill:light-dark(#204f38,#204f38);--day-soft:light-dark(#d9edde,#263e30);--day-ink:light-dark(#153725,#e3f6e9);--day-edge:light-dark(#58816a,#8eb49b)}
 #assignee-wizard [data-start][data-start-day=tomorrow]{--day-fill:light-dark(#1e528d,#1e528d);--day-soft:light-dark(#dbedfa,#263c55);--day-ink:light-dark(#143a57,#e5f1ff);--day-edge:light-dark(#547da2,#8daed0)}
@@ -534,7 +534,7 @@
   const section=(intent,title)=>`<section aria-labelledby="aw-home-${intent}"><h3 id="aw-home-${intent}">${title}</h3><div class="aw-start-options">${['今日','明日'].map((label,index)=>`
     <button type="button" data-start="${dates[index]}" data-start-day="${index?'tomorrow':'today'}" data-intent="${intent}" aria-label="${title}、${label} ${dates[index].replaceAll('-','/')}"><strong>${label}</strong><span>${dates[index].replaceAll('-','/')}</span></button>
   `).join('')}</div></section>`;
-  main.innerHTML=`<div class="aw-home">${section('assign','担当を割り付ける')}${section('view','担当を確認する')}</div>`;
+  main.innerHTML=`<div class="aw-home">${section('assign','担当を割り付ける')}${section('view','進捗を入力する')}</div>`;
  }
  function unavailableAssignments(){
   const candidates=new Set(availablePeople());
