@@ -378,12 +378,15 @@
  }
  function save(){
   if(busy)return;
-  const payload={date:state.date,revision,attendance:state.attendance,assignments:state.draft};
+  const assignments=structuredClone(state.draft);
+  Object.values(assignments).forEach(keepPrimaryOnly);
+  const payload={date:state.date,revision,attendance:state.attendance,assignments};
   busy=true;
   render();
   request('save',payload).then(result=>{
     revision=result.revision;
-    state.saved={date:state.date,assignments:JSON.parse(JSON.stringify(state.draft))};
+    state.draft=assignments;
+    state.saved={date:state.date,assignments:structuredClone(assignments)};
     savedInput=inputSnapshot();
     state.view='saved';
     busy=false;
@@ -394,10 +397,13 @@
  function table(list,editable,assignments=state.saved?.assignments,floors=false,heading=floors?'階':'業務'){
   return `<table><thead><tr><th scope="col">${esc(heading)}</th><th scope="col">主担当</th><th scope="col">副担当</th></tr></thead><tbody>${list.map(t=>{const v=(editable?state.draft:assignments)[t.id];return `<tr><th scope="row">${esc(floors?t.name.split(' ')[0]:t.name)}</th>${['main','sub'].map(role=>`<td>${editable?`<select aria-label="${esc(t.name)}の${role==='main'?'主担当':'副担当'}" data-id="${t.id}" data-edit="${role}">${options(v[role])}</select>`:esc(v[role])}</td>`).join('')}</tr>`;}).join('')}</tbody></table>`;
  }
+ function keepPrimaryOnly(assignment){
+  if(assignment.main===assignment.sub)assignment.sub='ーー';
+ }
  function assignPerson(task,role,person){
   const assignment=state.draft[task];
   assignment[role]=person;
-  if(role==='main'&&assignment.sub===person)assignment.sub='ーー';
+  keepPrimaryOnly(assignment);
  }
  const roleName=role=>role==='main'?'主担当':'副担当';
  function personList(task,role,label){
