@@ -204,6 +204,14 @@
 #assignee-wizard[data-layout=tablet] .aw-step{display:block;margin-top:5px;font-size:15px}
 #assignee-wizard[data-layout=tablet] #aw-content{display:grid;grid-template-rows:minmax(0,1fr) 92px;padding:0}
 #assignee-wizard[data-layout=tablet] .aw-edit-body{overflow:auto;min-width:0;padding:22px}
+#assignee-wizard .aw-review table{--aw-person-width:4.25em;font-size:20px}
+#assignee-wizard .aw-review table:has(select){--aw-person-width:5em}
+#assignee-wizard .aw-review thead th:first-child{width:auto}
+#assignee-wizard .aw-review thead th:nth-child(n+2){width:var(--aw-person-width)}
+#assignee-wizard .aw-review td{white-space:nowrap}
+#assignee-wizard .aw-review td select{font-size:inherit}
+#assignee-wizard .aw-review .aw-section h4{font-size:20px;font-weight:650}
+@media(max-width:420px){#assignee-wizard .aw-review table,#assignee-wizard .aw-review .aw-section h4{font-size:17px}}
 #assignee-wizard[data-layout=tablet] .aw-attendance{grid-template-columns:minmax(152px,1fr) minmax(0,3.2fr)}
 #assignee-wizard[data-layout=tablet] .aw-shifts{align-content:start;gap:8px}
 #assignee-wizard[data-layout=tablet] .aw-shifts button{min-height:62px}
