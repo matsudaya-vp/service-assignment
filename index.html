@@ -337,6 +337,9 @@
  let busy=false;
  let revision=null;
  let savedInput='';
+ let completionWrites=0;
+ let completionVersion=0;
+ let refreshingList=false;
  const inputSnapshot=()=>JSON.stringify([state.attendance,state.draft]);
  const homeButton='<button type="button" data-action="home">トップへ戻る</button>';
  function returnHome(){
@@ -416,6 +419,8 @@
   const note=main.querySelector('#aw-completion-status');
   const previous=current.completion[id];
   box.disabled=true;
+  completionWrites++;
+  completionVersion++;
   note.textContent='保存中…';
   try {
     const result=await request('completion',{date:current.date,id,checked:box.checked});
@@ -430,7 +435,49 @@
     box.checked=previous;
     note.textContent=error.message||'保存できませんでした。';
   }finally{
+    completionWrites--;
     box.disabled=false;
+  }
+ }
+ async function refreshAssignmentList(){
+  if(!session||state.view!=='view'||busy||refreshingList||completionWrites||document.hidden)return;
+  const current=state;
+  const version=completionVersion;
+  refreshingList=true;
+  try {
+    const result=await request('load',{date:current.date});
+    if(current!==state||state.view!=='view'||busy||completionWrites||version!==completionVersion)return;
+    const completion=result.completion??{};
+    if(revision===result.revision&&JSON.stringify(completion)===JSON.stringify(current.completion))return;
+    const scrollTop=main.querySelector('.aw-edit-body').scrollTop;
+    const focused=document.activeElement;
+    const focusKey=focused?.dataset.completion;
+    const focusAction=focused?.dataset.action;
+    data.people=result.people;
+    data.front=result.front;
+    tasks.forEach(task=>{
+      const label=result.labels[task.id];
+      task.name=task.id.startsWith('floor-')?label+' '+task.group:label;
+    });
+    units=makeUnits();
+    current.attendance=uniqueAttendance(result.attendance);
+    current.draft=result.assignments;
+    current.saved={date:current.date,assignments:structuredClone(result.assignments)};
+    current.completion=completion;
+    revision=result.revision;
+    savedInput=inputSnapshot();
+    render();
+    main.querySelector('.aw-edit-body').scrollTop=scrollTop;
+    const replacement=focusKey?root.querySelector(`[data-completion="${focusKey}"]`)
+      :focusAction?headerActions.querySelector(`[data-action="${focusAction}"]`):null;
+    replacement?.focus({preventScroll:true});
+  }catch(error){
+    if(current===state&&state.view==='view'&&version===completionVersion){
+      const note=main.querySelector('#aw-completion-status');
+      if(note)note.textContent=error.message||'最新の一覧を取得できませんでした。';
+    }
+  }finally{
+    refreshingList=false;
   }
  }
  function keepPrimaryOnly(assignment){
@@ -649,6 +696,9 @@
   }));
  }
  const params=new URLSearchParams(location.search);
+ setInterval(refreshAssignmentList,15000);
+ document.addEventListener('visibilitychange',refreshAssignmentList);
+ window.addEventListener('focus',refreshAssignmentList);
  if(params.has('code')||params.has('error'))completeSignIn(params).catch(showError);
  else if(!session)renderSignIn();
  else if(monitor)connect(availableDates()[0]);
