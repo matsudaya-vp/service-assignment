@@ -212,6 +212,11 @@
 #assignee-wizard .aw-review td select{font-size:inherit}
 #assignee-wizard .aw-review thead{border-top:2px solid var(--aw-green)}
 #assignee-wizard .aw-review thead th{font-weight:650}
+#assignee-wizard .aw-review table.aw-with-completion thead th:last-child{width:56px;text-align:center}
+#assignee-wizard .aw-completion{text-align:center;padding:0;color:var(--aw-muted)}
+#assignee-wizard .aw-completion label{display:grid;min-height:44px;place-items:center;cursor:pointer}
+#assignee-wizard .aw-completion input{width:24px;height:24px;margin:0;accent-color:var(--aw-green)}
+#assignee-wizard .aw-completion-done{background:var(--aw-fill)}
 @media(max-width:420px){#assignee-wizard .aw-review table{font-size:17px}}
 #assignee-wizard[data-layout=tablet] .aw-attendance{grid-template-columns:minmax(152px,1fr) minmax(0,3.2fr)}
 #assignee-wizard[data-layout=tablet] .aw-shifts{align-content:start;gap:8px}
@@ -369,7 +374,7 @@
     });
     units=makeUnits();
     revision=result.revision;
-    state={...state,date,step:0,view:intent==='view'?'view':'attendance',directReview:intent==='view',attendance:uniqueAttendance(result.attendance),draft:result.assignments};
+    state={...state,date,step:0,view:intent==='view'?'view':'attendance',directReview:intent==='view',attendance:uniqueAttendance(result.attendance),draft:result.assignments,completion:result.completion??{}};
     if(intent==='view')state.saved={date,assignments:structuredClone(state.draft)};
     savedInput=inputSnapshot();
     busy=false;
@@ -394,8 +399,39 @@
   }).catch(showError);
  }
  function options(v){return availablePeople().map(p=>`<option${v===p?' selected':''}>${esc(p)}</option>`).join('');}
- function table(list,editable,assignments=state.saved?.assignments,floors=false,heading=floors?'階':'業務'){
-  return `<table><thead><tr><th scope="col">${esc(heading)}</th><th scope="col">主担当</th><th scope="col">副担当</th></tr></thead><tbody>${list.map(t=>{const v=(editable?state.draft:assignments)[t.id];return `<tr><th scope="row">${esc(floors?t.name.split(' ')[0]:t.name)}</th>${['main','sub'].map(role=>`<td>${editable?`<select aria-label="${esc(t.name)}の${role==='main'?'主担当':'副担当'}" data-id="${t.id}" data-edit="${role}">${options(v[role])}</select>`:esc(v[role])}</td>`).join('')}</tr>`;}).join('')}</tbody></table>`;
+ function table(list,editable,assignments=state.saved?.assignments,floors=false,heading=floors?'階':'業務',completion=null){
+  return `<table${completion?' class="aw-with-completion"':''}><thead><tr><th scope="col">${esc(heading)}</th><th scope="col">主担当</th><th scope="col">副担当</th>${completion?'<th scope="col">完了</th>':''}</tr></thead><tbody>${list.map(t=>{const v=(editable?state.draft:assignments)[t.id];return `<tr${completion?.[t.id]?' class="aw-completion-done"':''}><th scope="row">${esc(floors?t.name.split(' ')[0]:t.name)}</th>${['main','sub'].map(role=>`<td>${editable?`<select aria-label="${esc(t.name)}の${role==='main'?'主担当':'副担当'}" data-id="${t.id}" data-edit="${role}">${options(v[role])}</select>`:esc(v[role])}</td>`).join('')}${completion?completionCell(t,completion):''}</tr>`;}).join('')}</tbody></table>`;
+ }
+ function completionCell(task,values){
+  if(!Object.hasOwn(values,task.id))return '<td class="aw-completion">—</td>';
+  return `<td class="aw-completion"><label><input type="checkbox" data-completion="${task.id}" aria-label="${esc(task.name)}の完了"${values[task.id]?' checked':''}></label></td>`;
+ }
+ function completionCount(){
+  const values=Object.values(state.completion);
+  return `完了 ${values.filter(Boolean).length} / ${values.length}件`;
+ }
+ async function changeCompletion(box){
+  const current=state;
+  const id=box.dataset.completion;
+  const note=main.querySelector('#aw-completion-status');
+  const previous=current.completion[id];
+  box.disabled=true;
+  note.textContent='保存中…';
+  try {
+    const result=await request('completion',{date:current.date,id,checked:box.checked});
+    current.completion[id]=result.checked;
+    if(current!==state||!box.isConnected)return;
+    box.checked=result.checked;
+    box.closest('tr').classList.toggle('aw-completion-done',result.checked);
+    main.querySelector('#aw-completion-count').textContent=completionCount();
+    note.textContent='保存済';
+  }catch(error){
+    if(current!==state||!box.isConnected)return;
+    box.checked=previous;
+    note.textContent=error.message||'保存できませんでした。';
+  }finally{
+    box.disabled=false;
+  }
  }
  function keepPrimaryOnly(assignment){
   if(assignment.main===assignment.sub)assignment.sub='ーー';
@@ -524,9 +560,10 @@
   const reviewSection=group=>{
     const list=tasks.filter(task=>task.group===group);
     const floors=list[0]?.id.startsWith('floor-');
-    return `<section class="aw-section" aria-label="${esc(group)}">${table(list,!readOnly,assignments,floors,group)}</section>`;
+    return `<section class="aw-section" aria-label="${esc(group)}">${table(list,!readOnly,assignments,floors,group,state.view==='view'?state.completion:null)}</section>`;
   };
-  main.innerHTML=`<div class="aw-edit-body">${saved?'<div class="aw-saved"><strong>スプレッドシートに保存しました</strong></div>':''}<p>${tasks.length}業務　／　主担当未選択 ${unassigned}件</p><div class="aw-review">${[groups.slice(0,2),groups.slice(2)].map(gs=>`<div>${gs.map(reviewSection).join('')}</div>`).join('')}</div></div><div class="aw-attendance-footer">${readOnly?'':'<button type="button" class="aw-primary" data-action="save">担当を確定</button>'}</div>`;
+  const summary=state.view==='view'?`<strong id="aw-completion-count" aria-live="polite">${completionCount()}</strong>　<span id="aw-completion-status" role="status"></span>`:`${tasks.length}業務　／　主担当未選択 ${unassigned}件`;
+  main.innerHTML=`<div class="aw-edit-body">${saved?'<div class="aw-saved"><strong>スプレッドシートに保存しました</strong></div>':''}<p>${summary}</p><div class="aw-review">${[[groups[0],groups[5],groups[1]],groups.slice(2,5)].map(gs=>`<div>${gs.map(reviewSection).join('')}</div>`).join('')}</div></div><div class="aw-attendance-footer">${readOnly?'':'<button type="button" class="aw-primary" data-action="save">担当を確定</button>'}</div>`;
  }
  root.addEventListener('click',e=>{
   const start=e.target.closest('[data-start]');
@@ -591,6 +628,10 @@
     state.view='wizard';
   }if(a==='next'){if(state.step<units.length-1)state.step++;else state.view='review';}if(a==='review'||a==='edit')state.view='review';if(a==='resume')state.view='wizard';if(a==='save'){save();return;}render();});
  root.addEventListener('change',e=>{
+  if(e.target.matches('[data-completion]')&&state.view==='view'){
+    changeCompletion(e.target);
+    return;
+  }
   if(!e.target.matches('[data-edit]'))return;
   const {id,edit:role}=e.target.dataset;
   const scrollTop=main.querySelector('.aw-edit-body').scrollTop;
