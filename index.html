@@ -210,8 +210,9 @@
 #assignee-wizard .aw-review thead th:nth-child(n+2){width:var(--aw-person-width)}
 #assignee-wizard .aw-review td{white-space:nowrap}
 #assignee-wizard .aw-review td select{font-size:inherit}
-#assignee-wizard .aw-review .aw-section h4{font-size:20px;font-weight:650}
-@media(max-width:420px){#assignee-wizard .aw-review table,#assignee-wizard .aw-review .aw-section h4{font-size:17px}}
+#assignee-wizard .aw-review thead{border-top:2px solid var(--aw-green)}
+#assignee-wizard .aw-review thead th{font-weight:650}
+@media(max-width:420px){#assignee-wizard .aw-review table{font-size:17px}}
 #assignee-wizard[data-layout=tablet] .aw-attendance{grid-template-columns:minmax(152px,1fr) minmax(0,3.2fr)}
 #assignee-wizard[data-layout=tablet] .aw-shifts{align-content:start;gap:8px}
 #assignee-wizard[data-layout=tablet] .aw-shifts button{min-height:62px}
@@ -390,7 +391,9 @@
   }).catch(showError);
  }
  function options(v){return availablePeople().map(p=>`<option${v===p?' selected':''}>${esc(p)}</option>`).join('');}
- function table(list,editable,assignments=state.saved?.assignments,floors=false){return `<table><thead><tr><th>${floors?'階':'業務'}</th><th>主担当</th><th>副担当</th></tr></thead><tbody>${list.map(t=>{const v=(editable?state.draft:assignments)[t.id];return `<tr><th scope="row">${esc(floors?t.name.split(' ')[0]:t.name)}</th>${['main','sub'].map(role=>`<td>${editable?`<select aria-label="${esc(t.name)}の${role==='main'?'主担当':'副担当'}" data-id="${t.id}" data-edit="${role}">${options(v[role])}</select>`:esc(v[role])}</td>`).join('')}</tr>`;}).join('')}</tbody></table>`;}
+ function table(list,editable,assignments=state.saved?.assignments,floors=false,heading=floors?'階':'業務'){
+  return `<table><thead><tr><th scope="col">${esc(heading)}</th><th scope="col">主担当</th><th scope="col">副担当</th></tr></thead><tbody>${list.map(t=>{const v=(editable?state.draft:assignments)[t.id];return `<tr><th scope="row">${esc(floors?t.name.split(' ')[0]:t.name)}</th>${['main','sub'].map(role=>`<td>${editable?`<select aria-label="${esc(t.name)}の${role==='main'?'主担当':'副担当'}" data-id="${t.id}" data-edit="${role}">${options(v[role])}</select>`:esc(v[role])}</td>`).join('')}</tr>`;}).join('')}</tbody></table>`;
+ }
  function assignPerson(task,role,person){
   const assignment=state.draft[task];
   assignment[role]=person;
@@ -512,7 +515,12 @@
   const unassigned=tasks.filter(task=>assignments[task.id].main==='ーー').length;
   headerTitle.innerHTML=`<h3>${saved?'確定後の担当表':'担当一覧'}</h3><span class="aw-step">${readOnly?'保存済みの担当':'確認・修正'}</span>`;
   headerActions.innerHTML=homeButton+(readOnly?'<button type="button" data-action="edit">一覧を修正</button>':state.directReview?'':'<button type="button" data-action="resume">担当選択に戻る</button>');
-  main.innerHTML=`<div class="aw-edit-body">${saved?'<div class="aw-saved"><strong>スプレッドシートに保存しました</strong></div>':''}<p>${tasks.length}業務　／　主担当未選択 ${unassigned}件</p><div class="aw-review">${[groups.slice(0,2),groups.slice(2)].map(gs=>`<div>${gs.map(group=>`<section class="aw-section"><h4>${esc(group)}</h4>${table(tasks.filter(task=>task.group===group),!readOnly)}</section>`).join('')}</div>`).join('')}</div></div><div class="aw-attendance-footer">${readOnly?'':'<button type="button" class="aw-primary" data-action="save">担当を確定</button>'}</div>`;
+  const reviewSection=group=>{
+    const list=tasks.filter(task=>task.group===group);
+    const floors=list[0]?.id.startsWith('floor-');
+    return `<section class="aw-section" aria-label="${esc(group)}">${table(list,!readOnly,assignments,floors,group)}</section>`;
+  };
+  main.innerHTML=`<div class="aw-edit-body">${saved?'<div class="aw-saved"><strong>スプレッドシートに保存しました</strong></div>':''}<p>${tasks.length}業務　／　主担当未選択 ${unassigned}件</p><div class="aw-review">${[groups.slice(0,2),groups.slice(2)].map(gs=>`<div>${gs.map(reviewSection).join('')}</div>`).join('')}</div></div><div class="aw-attendance-footer">${readOnly?'':'<button type="button" class="aw-primary" data-action="save">担当を確定</button>'}</div>`;
  }
  root.addEventListener('click',e=>{
   const start=e.target.closest('[data-start]');
