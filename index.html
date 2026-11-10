@@ -334,6 +334,9 @@
  let completionWrites=0;
  let completionVersion=0;
  let refreshingList=false;
+ const progressInterval=15000;
+ let progressTimer;
+ let nextProgressAt=0;
  const inputSnapshot=()=>JSON.stringify([state.attendance,state.draft]);
  const homeButton='<button type="button" data-action="home">トップへ戻る</button>';
  function returnHome(){
@@ -342,6 +345,7 @@
   revision=null;
   target=null;
   activeShift=0;
+  scheduleProgressRead();
   render();
   main.querySelector('[data-start]')?.focus();
  }
@@ -362,21 +366,28 @@
   root.dataset.day=date===availableDates()[1]?'tomorrow':'today';
   busy=true;
   render();
-  request('load',{date}).then(result=>{
-    data.people=result.people;
-    data.front=result.front;
+  const scope=intent==='view'?'progress':monitor?undefined:'edit';
+  request('load',{date,scope}).then(result=>{
+    if(intent!=='view'){
+      data.people=result.people;
+      data.front=result.front;
+    }
     tasks.forEach(task=>{
       const label=result.labels[task.id];
       task.name=task.id.startsWith('floor-')?label+' '+task.group:label;
     });
     units=makeUnits();
     revision=result.revision;
-    state={...state,date,step:0,view:intent==='view'?'view':'attendance',directReview:intent==='view',attendance:uniqueAttendance(result.attendance),draft:result.assignments,completion:result.completion??{}};
-    if(intent==='view')state.saved={date,assignments:structuredClone(state.draft)};
+    state={...state,date,step:0,view:intent==='view'?'view':intent==='edit'?'review':'attendance',directReview:intent!=='assign',attendance:uniqueAttendance(result.attendance),draft:result.assignments,labels:result.labels,completion:result.completion??{}};
+    if(intent==='view'){
+      state.saved={date,assignments:structuredClone(state.draft)};
+      nextProgressAt=Date.now()+progressInterval;
+    }
     savedInput=inputSnapshot();
     busy=false;
     render();
-  }).catch(showError);
+    scheduleProgressRead();
+  }).catch(error=>{showError(error);scheduleProgressRead();});
  }
  function save(){
   if(busy)return;
@@ -431,34 +442,42 @@
   }finally{
     completionWrites--;
     box.disabled=false;
+    scheduleProgressRead();
   }
  }
+ function canRefreshProgress(){
+  return session&&state.view==='view'&&!busy&&!refreshingList&&!completionWrites&&!document.hidden;
+ }
+ function scheduleProgressRead(){
+  clearTimeout(progressTimer);
+  if(canRefreshProgress())progressTimer=setTimeout(refreshAssignmentList,Math.max(0,nextProgressAt-Date.now()));
+ }
  async function refreshAssignmentList(){
-  if(!session||state.view!=='view'||busy||refreshingList||completionWrites||document.hidden)return;
+  if(!canRefreshProgress())return;
+  if(Date.now()<nextProgressAt){scheduleProgressRead();return;}
+  nextProgressAt=Date.now()+progressInterval;
   const current=state;
   const version=completionVersion;
   refreshingList=true;
   try {
-    const result=await request('load',{date:current.date});
+    const result=await request('load',{date:current.date,scope:'progress'});
     if(current!==state||state.view!=='view'||busy||completionWrites||version!==completionVersion)return;
     const completion=result.completion??{};
-    if(revision===result.revision&&JSON.stringify(completion)===JSON.stringify(current.completion))return;
+    if(JSON.stringify([result.labels,result.assignments,completion])===
+       JSON.stringify([current.labels,current.draft,current.completion]))return;
     const scrollTop=main.querySelector('.aw-edit-body').scrollTop;
     const focused=document.activeElement;
     const focusKey=focused?.dataset.completion;
     const focusAction=focused?.dataset.action;
-    data.people=result.people;
-    data.front=result.front;
     tasks.forEach(task=>{
       const label=result.labels[task.id];
       task.name=task.id.startsWith('floor-')?label+' '+task.group:label;
     });
     units=makeUnits();
-    current.attendance=uniqueAttendance(result.attendance);
+    current.labels=result.labels;
     current.draft=result.assignments;
     current.saved={date:current.date,assignments:structuredClone(result.assignments)};
     current.completion=completion;
-    revision=result.revision;
     savedInput=inputSnapshot();
     render();
     main.querySelector('.aw-edit-body').scrollTop=scrollTop;
@@ -472,6 +491,7 @@
     }
   }finally{
     refreshingList=false;
+    scheduleProgressRead();
   }
  }
  function keepPrimaryOnly(assignment){
@@ -660,6 +680,10 @@
     if(a==='discard-home')returnHome();
     return;
   }
+  if(a==='edit'&&state.view==='view'){
+    if(!completionWrites)connect(state.date,'edit');
+    return;
+  }
   if(a==='back'){
     if(state.step===0)state.view='attendance';
     else state.step--;
@@ -690,7 +714,6 @@
   }));
  }
  const params=new URLSearchParams(location.search);
- setInterval(refreshAssignmentList,15000);
  document.addEventListener('visibilitychange',refreshAssignmentList);
  window.addEventListener('focus',refreshAssignmentList);
  if(params.has('code')||params.has('error'))completeSignIn(params).catch(showError);
