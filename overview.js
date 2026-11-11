@@ -56,8 +56,8 @@ window.mountAssignmentOverview = function (host, initial, hooks) {
         '</th><td class="ap-names">' + personNames(snapshot.assignments[task.id]) + '</td><td>' + textCell(task.id) +
         '</td><td class="ap-check-cell">' + check(task.id,task.name) + '</td></tr>';
     }).join("");
-    return '<section><table class="ap-tasks"><colgroup><col><col><col><col></colgroup>' +
-      '<thead><tr><th scope="col">業務の担当と完了</th><th scope="col">担当者</th><th scope="col">特記事項</th><th scope="col" aria-label="完了">済</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
+    return '<section><table class="ap-tasks" aria-label="日次業務"><colgroup><col><col><col><col></colgroup>' +
+      '<thead><tr><th scope="col" class="ap-table-title" aria-label="業務">日次業務</th><th scope="col">担当者</th><th scope="col">特記事項</th><th scope="col" class="ap-completion-heading">完了</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
   }
 
   function floorTable() {
@@ -68,8 +68,8 @@ window.mountAssignmentOverview = function (host, initial, hooks) {
         return '<td data-completion-item="' + id + '"' + done(id) + '><div class="ap-floor-person"><span class="ap-names">' +
           personNames(snapshot.assignments[id]) + '</span>' + check(id,name) + '</div></td>';
       }).join("") + '</tr>').join("");
-    return '<section><table class="ap-floor" aria-label="フロア別の準備担当"><colgroup><col><col><col><col></colgroup>' +
-      '<thead><tr><th scope="col" aria-label="階"></th><th scope="col">リネン</th><th scope="col">ベッドメイク</th><th scope="col">客室点検</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
+    return '<section><table class="ap-floor" aria-label="フロア別担当"><colgroup><col><col><col><col></colgroup>' +
+      '<thead><tr><th scope="col" class="ap-table-title" aria-label="階">フロア別担当</th><th scope="col">リネン</th><th scope="col">ベッドメイク</th><th scope="col">客室点検</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
   }
 
   function smallTable(title, prefix, completion) {
@@ -77,9 +77,9 @@ window.mountAssignmentOverview = function (host, initial, hooks) {
     const rows = list.map(task => '<tr data-completion-item="' + task.id + '"' + done(task.id) + '><th scope="row">' +
       escapeHtml(task.name) + '</th><td class="ap-names">' + personNames(snapshot.assignments[task.id]) + '</td>' +
       (completion ? '<td class="ap-check-cell">' + check(task.id,task.name) + '</td>' : "") + '</tr>').join("");
-    return '<section><table class="ap-small ' + (completion ? 'ap-clean' : '') + '">' +
-      '<colgroup><col><col>' + (completion ? '<col>' : '') + '</colgroup><thead><tr><th scope="col">' + title + '</th><th scope="col">担当者</th>' +
-      (completion ? '<th scope="col" aria-label="完了">済</th>' : "") + '</tr></thead><tbody>' + rows + '</tbody></table></section>';
+    return '<section><table class="ap-small ' + (completion ? 'ap-clean' : '') + '" aria-label="' + title + '">' +
+      '<colgroup><col><col>' + (completion ? '<col>' : '') + '</colgroup><thead><tr><th scope="col" class="ap-table-title" aria-label="業務">' + title + '</th><th scope="col">担当者</th>' +
+      (completion ? '<th scope="col" class="ap-completion-heading">完了</th>' : "") + '</tr></thead><tbody>' + rows + '</tbody></table></section>';
   }
 
   function render() {
@@ -94,8 +94,11 @@ window.mountAssignmentOverview = function (host, initial, hooks) {
     element.querySelector('[data-overview-action="edit"]').hidden = !writable();
     const notes = snapshot.handover.map(note => '<tr><td>' + textCell(note.id) + '</td><td>' +
       escapeHtml(note.person || "—") + '</td><td>' + escapeHtml(note.deadline || "—") + '</td></tr>').join("");
-    const shifts = ["早番","遅出","中抜","9時出","フロント"].map((label,index) =>
-      '<div><dt>' + label + '</dt><dd>' + escapeHtml(snapshot.attendance[index]?.join("・") || "ーー") + '</dd></div>').join("");
+    const shifts = ["早番","遅出","中抜","9時出","フロント"].map((label,index) => {
+      const names = snapshot.attendance[index] ?? [];
+      return '<div><dt>' + label + '</dt><dd>' + (names.length ?
+        names.map(name => '<span>' + escapeHtml(name) + '</span>').join(" ") : '<span class="ap-note">ーー</span>') + '</dd></div>';
+    }).join("");
     body.innerHTML = '<div class="ap-overview"><section class="ap-handoff"><h3 class="ap-section-title">申し送り</h3><table><colgroup><col><col><col></colgroup>' +
       '<thead><tr><th scope="col">内容</th><th scope="col">引き継ぎ担当</th><th scope="col">期限</th></tr></thead><tbody>' + notes + '</tbody></table></section>' +
       '<section><h3 class="ap-section-title">出勤者</h3><dl class="ap-shifts">' + shifts + '</dl></section></div>' +
