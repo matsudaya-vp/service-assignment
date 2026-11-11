@@ -1,5 +1,5 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>接客サービスの担当割り</title><link rel="stylesheet" href="overview.css?v=20261111-1"></head><body>
-<div id="assignee-wizard" aria-label="担当者選択プロトタイプ" style="box-sizing:border-box">
+<div id="assignee-wizard" aria-label="接客サービスの担当管理" style="box-sizing:border-box">
   <header>
     <div id="aw-header-title"></div>
     <div class="aw-header-meta">
@@ -326,7 +326,7 @@
   main.textContent='Googleアカウントを確認しています…';
   const result=await request('login',{code:params.get('code'),verifier:previous.verifier});
   rememberRegistration(result);
-  if(monitor)connect(availableDates()[0]);
+  if(monitor){monitor=false;connect(availableDates()[0],'view');}
   else render();
  }
  let busy=false;
