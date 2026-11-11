@@ -11,6 +11,7 @@ body {margin:0;}
 }
 #assignee-wizard[data-mode=overview] .ap-app[data-day=tomorrow] {--ap-day:light-dark(#245b85,#2d638c);--ap-tint:light-dark(#e8f2fa,#253949);}
 #assignee-wizard[data-mode=overview] .ap-app[data-day=yesterday] {--ap-day:light-dark(#515b58,#48524e);--ap-tint:light-dark(#edf1ef,#28342e);}
+#assignee-wizard[data-mode=overview] .ap-app[data-day=yesterday] .ap-header {background:#990000;}
 #assignee-wizard[data-mode=overview] h2,#assignee-wizard[data-mode=overview] h3,#assignee-wizard[data-mode=overview] p {margin:0;}
 #assignee-wizard[data-mode=overview] button {
   min-height:44px;padding:6px 12px;border:1px solid var(--ap-line);border-radius:5px;
