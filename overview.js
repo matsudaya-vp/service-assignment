@@ -46,7 +46,7 @@ window.mountAssignmentOverview = function (host, initial, hooks) {
   function textCell(id) {
     const {text, label} = field(id);
     const preview = text ? '<button type="button" class="ap-detail" data-overview-read-text="' + id + '">' + escapeHtml(text.replace(/\r?\n/g," ")) + '</button>' : '<span class="ap-note">—</span>';
-    const pencil = writable() ? '<button type="button" class="ap-pencil" data-overview-edit-text="' + id + '" aria-label="' + escapeHtml(label) + 'を編集"><span aria-hidden="true">✎</span></button>' : "";
+    const pencil = writable() ? '<button type="button" class="ap-pencil" data-overview-edit-text="' + id + '" aria-label="' + escapeHtml(label) + 'を編集"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M1 15l1-5 9-9 4 4-9 9zM9 3l4 4"/></svg></button>' : "";
     return '<div class="ap-text-field">' + preview + pencil + '</div>';
   }
 
