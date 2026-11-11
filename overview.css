@@ -103,3 +103,14 @@ body {margin:0;}
   #assignee-wizard[data-mode=overview] .ap-tasks {font-size:16px;}
 }
 
+
+#assignee-wizard[data-mode=overview] .ap-layout thead th {background:var(--ap-tint);border-top:2px solid var(--ap-day);padding-block:6px;}
+#assignee-wizard[data-mode=overview] .ap-tasks thead th:first-child,
+#assignee-wizard[data-mode=overview] .ap-small thead th:first-child {font-size:1em;color:var(--ap-ink);}
+@media(min-width:1100px) {
+  #assignee-wizard[data-mode=overview] .ap-header {padding-block:6px;}
+  #assignee-wizard[data-mode=overview] .ap-body {padding-block:8px;}
+  #assignee-wizard[data-mode=overview] .ap-layout {margin-top:10px;}
+  #assignee-wizard[data-mode=overview] .ap-side {gap:10px;}
+  #assignee-wizard[data-mode=overview] .ap-shifts {padding-block:8px;}
+}

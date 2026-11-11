@@ -51,15 +51,13 @@ window.mountAssignmentOverview = function (host, initial, hooks) {
   }
 
   function taskTable() {
-    const rows = primaryTasks.map((task, index) => {
-      const heading = index === 0 ? "ミーティング前の業務" : index === 6 ? "日中の業務" : "";
-      return (heading ? '<tr class="ap-group"><th colspan="4">' + heading + '</th></tr>' : "") +
-        '<tr data-completion-item="' + task.id + '"' + done(task.id) + '><th scope="row">' + escapeHtml(task.name) +
+    const rows = primaryTasks.map(task => {
+      return '<tr data-completion-item="' + task.id + '"' + done(task.id) + '><th scope="row">' + escapeHtml(task.name) +
         '</th><td class="ap-names">' + personNames(snapshot.assignments[task.id]) + '</td><td>' + textCell(task.id) +
         '</td><td class="ap-check-cell">' + check(task.id,task.name) + '</td></tr>';
     }).join("");
-    return '<section><h3 class="ap-section-title">業務の担当と完了</h3><table class="ap-tasks"><colgroup><col><col><col><col></colgroup>' +
-      '<thead><tr><th scope="col">業務</th><th scope="col">担当者</th><th scope="col">特記事項</th><th scope="col">完了</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
+    return '<section><table class="ap-tasks"><colgroup><col><col><col><col></colgroup>' +
+      '<thead><tr><th scope="col">業務の担当と完了</th><th scope="col">担当者</th><th scope="col">特記事項</th><th scope="col" aria-label="完了">済</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
   }
 
   function floorTable() {
@@ -70,8 +68,8 @@ window.mountAssignmentOverview = function (host, initial, hooks) {
         return '<td data-completion-item="' + id + '"' + done(id) + '><div class="ap-floor-person"><span class="ap-names">' +
           personNames(snapshot.assignments[id]) + '</span>' + check(id,name) + '</div></td>';
       }).join("") + '</tr>').join("");
-    return '<section><h3 class="ap-section-title">フロア別の準備担当</h3><table class="ap-floor"><colgroup><col><col><col><col></colgroup>' +
-      '<thead><tr><th scope="col">階</th><th scope="col">リネン</th><th scope="col">ベッドメイク</th><th scope="col">客室点検</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
+    return '<section><table class="ap-floor" aria-label="フロア別の準備担当"><colgroup><col><col><col><col></colgroup>' +
+      '<thead><tr><th scope="col" aria-label="階"></th><th scope="col">リネン</th><th scope="col">ベッドメイク</th><th scope="col">客室点検</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
   }
 
   function smallTable(title, prefix, completion) {
@@ -79,9 +77,9 @@ window.mountAssignmentOverview = function (host, initial, hooks) {
     const rows = list.map(task => '<tr data-completion-item="' + task.id + '"' + done(task.id) + '><th scope="row">' +
       escapeHtml(task.name) + '</th><td class="ap-names">' + personNames(snapshot.assignments[task.id]) + '</td>' +
       (completion ? '<td class="ap-check-cell">' + check(task.id,task.name) + '</td>' : "") + '</tr>').join("");
-    return '<section><h3 class="ap-section-title">' + title + '</h3><table class="ap-small ' + (completion ? 'ap-clean' : '') + '">' +
-      '<colgroup><col><col>' + (completion ? '<col>' : '') + '</colgroup><thead><tr><th scope="col">業務</th><th scope="col">担当者</th>' +
-      (completion ? '<th scope="col">完了</th>' : "") + '</tr></thead><tbody>' + rows + '</tbody></table></section>';
+    return '<section><table class="ap-small ' + (completion ? 'ap-clean' : '') + '">' +
+      '<colgroup><col><col>' + (completion ? '<col>' : '') + '</colgroup><thead><tr><th scope="col">' + title + '</th><th scope="col">担当者</th>' +
+      (completion ? '<th scope="col" aria-label="完了">済</th>' : "") + '</tr></thead><tbody>' + rows + '</tbody></table></section>';
   }
 
   function render() {
