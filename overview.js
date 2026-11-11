@@ -68,8 +68,8 @@ window.mountAssignmentOverview = function (host, initial, hooks) {
         return '<td data-completion-item="' + id + '"' + done(id) + '><div class="ap-floor-person"><span class="ap-names">' +
           personNames(snapshot.assignments[id]) + '</span>' + check(id,name) + '</div></td>';
       }).join("") + '</tr>').join("");
-    return '<section><table class="ap-floor" aria-label="フロア別担当"><colgroup><col><col><col><col></colgroup>' +
-      '<thead><tr><th scope="col" class="ap-table-title" aria-label="階">フロア別担当</th><th scope="col">リネン</th><th scope="col">ベッドメイク</th><th scope="col">客室点検</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
+    return '<section><table class="ap-floor" aria-label="担当"><colgroup><col><col><col><col></colgroup>' +
+      '<thead><tr><th scope="col" class="ap-table-title" aria-label="階">担当</th><th scope="col">リネン</th><th scope="col">ベッドメイク</th><th scope="col">客室点検</th></tr></thead><tbody>' + rows + '</tbody></table></section>';
   }
 
   function smallTable(title, prefix, completion) {
