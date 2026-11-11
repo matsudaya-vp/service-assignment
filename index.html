@@ -159,6 +159,8 @@
 #assignee-wizard .aw-home section+section{border-top:1px solid var(--aw-line);padding-top:24px}
 #assignee-wizard .aw-home h3{margin:0 0 12px;font-size:22px;font-weight:700}
 #assignee-wizard .aw-start-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,3vw,32px)}
+#assignee-wizard #aw-home-view+.aw-start-options{grid-template-columns:repeat(3,minmax(0,1fr))}
+#assignee-wizard [data-start][data-start-day=yesterday]{--day-soft:light-dark(#f7e5e8,#472b32);--day-ink:light-dark(#682434,#ffebef);--day-edge:light-dark(#ac6878,#d494a3)}
 #assignee-wizard .aw-start-options button{display:grid;place-content:center;gap:4px;min-height:120px;padding:8px;font-size:19px;border-color:var(--day-edge)}
 #assignee-wizard .aw-start-options strong{font-size:25px}
 #assignee-wizard [data-start][data-start-day=today]{--day-fill:light-dark(#204f38,#204f38);--day-soft:light-dark(#d9edde,#263e30);--day-ink:light-dark(#153725,#e3f6e9);--day-edge:light-dark(#58816a,#8eb49b)}
@@ -574,9 +576,10 @@
   return [now,now+86400000].map(value=>tokyoDate.format(value).replaceAll('/','-'));
  }
  function renderStart(){
-  const dates=availableDates();
-  const section=(intent,title)=>`<section aria-labelledby="aw-home-${intent}"><h3 id="aw-home-${intent}">${title}</h3><div class="aw-start-options">${['今日','明日'].map((label,index)=>`
-    <button type="button" data-start="${dates[index]}" data-start-day="${index?'tomorrow':'today'}" data-intent="${intent}" aria-label="${title}、${label} ${dates[index].replaceAll('-','/')}"><strong>${label}</strong><span>${dates[index].replaceAll('-','/')}</span></button>
+  const dates=overviewDates();
+  const days=[['昨日','yesterday'],['今日','today'],['明日','tomorrow']].map(([label,day],index)=>({label,day,date:dates[index]}));
+  const section=(intent,title)=>`<section aria-labelledby="aw-home-${intent}"><h3 id="aw-home-${intent}">${title}</h3><div class="aw-start-options">${(intent==='view'?days:days.slice(1)).map(({label,day,date})=>`
+    <button type="button" data-start="${date}" data-start-day="${day}" data-intent="${intent}" aria-label="${title}、${label} ${date.replaceAll('-','/')}"><strong>${label}</strong><span>${date.replaceAll('-','/')}</span></button>
   `).join('')}</div></section>`;
   main.innerHTML=`<div class="aw-home">${section('assign','担当を割り付ける')}${section('view','担当・進捗')}</div>`;
  }
@@ -667,8 +670,9 @@
   const start=e.target.closest('[data-start]');
   if(start&&state.view==='start'&&!busy){
     const chosen=start.dataset.start;
-    if(!availableDates().includes(chosen)){renderStart();return;}
-    connect(chosen,start.dataset.intent);
+    const intent=start.dataset.intent;
+    if(!(intent==='view'?overviewDates():availableDates()).includes(chosen)){renderStart();return;}
+    connect(chosen,intent);
     return;
   }
   const shift=e.target.closest('[data-shift]');
