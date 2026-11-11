@@ -1,4 +1,4 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>接客サービスの担当割り</title></head><body>
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>接客サービスの担当割り</title><link rel="stylesheet" href="overview.css?v=20261111-1"></head><body>
 <div id="assignee-wizard" aria-label="担当者選択プロトタイプ" style="box-sizing:border-box">
   <header>
     <div id="aw-header-title"></div>
@@ -243,6 +243,7 @@
 </style>
 <script id="aw-source" type="application/json">{"tasks":[{"id":"task-13","group":"ミーティング前の業務","name":"朝刊"},{"id":"task-14","group":"ミーティング前の業務","name":"パントリー掃除"},{"id":"task-15","group":"ミーティング前の業務","name":"アメニティ補充"},{"id":"task-16","group":"ミーティング前の業務","name":"おしぼり補充"},{"id":"task-17","group":"ミーティング前の業務","name":"風呂そうじ"},{"id":"task-18","group":"ミーティング前の業務","name":"ベッドメイク"},{"id":"task-20","group":"共通業務","name":"庭園入口清掃"},{"id":"task-21","group":"共通業務","name":"つくばい掃除"},{"id":"task-22","group":"共通業務","name":"ロクシタン補充"},{"id":"task-23","group":"共通業務","name":"ラウンジ準備"},{"id":"task-24","group":"共通業務","name":"ドリンク補充"},{"id":"task-25","group":"共通業務","name":"化粧水補充"},{"id":"floor-13-27","group":"リネン","name":"1階 リネン"},{"id":"floor-13-34","group":"ベッドメイク","name":"1階 ベッドメイク"},{"id":"floor-13-41","group":"客室点検","name":"1階 客室点検"},{"id":"floor-14-27","group":"リネン","name":"2階 リネン"},{"id":"floor-14-34","group":"ベッドメイク","name":"2階 ベッドメイク"},{"id":"floor-14-41","group":"客室点検","name":"2階 客室点検"},{"id":"floor-15-27","group":"リネン","name":"3階 リネン"},{"id":"floor-15-34","group":"ベッドメイク","name":"3階 ベッドメイク"},{"id":"floor-15-41","group":"客室点検","name":"3階 客室点検"},{"id":"floor-16-27","group":"リネン","name":"4階 リネン"},{"id":"floor-16-34","group":"ベッドメイク","name":"4階 ベッドメイク"},{"id":"floor-16-41","group":"客室点検","name":"4階 客室点検"},{"id":"floor-17-27","group":"リネン","name":"5階 リネン"},{"id":"floor-17-34","group":"ベッドメイク","name":"5階 ベッドメイク"},{"id":"floor-17-41","group":"客室点検","name":"5階 客室点検"},{"id":"floor-18-27","group":"リネン","name":"6階 リネン"},{"id":"floor-18-34","group":"ベッドメイク","name":"6階 ベッドメイク"},{"id":"floor-18-41","group":"客室点検","name":"6階 客室点検"},{"id":"clean-21","group":"清掃業務","name":"快活楼"},{"id":"common-21","group":"共通業務","name":"お茶出し"},{"id":"clean-22","group":"清掃業務","name":"錦旗"},{"id":"common-22","group":"共通業務","name":"客室案内"},{"id":"clean-23","group":"清掃業務","name":"花柏の湯"},{"id":"common-23","group":"共通業務","name":"朝お見送り"},{"id":"clean-24","group":"清掃業務","name":"維新の湯"}],"people":[],"front":[]}</script>
 <script src="config.js"></script>
+<script src="overview.js?v=20261111-1"></script>
 <script>
 (()=>{
  const root=document.getElementById('assignee-wizard');const data=JSON.parse(document.getElementById('aw-source').textContent);const tasks=data.tasks;const empty=()=>Object.fromEntries(tasks.map(t=>[t.id,{main:'ーー',sub:'ーー'}]));
@@ -334,6 +335,7 @@
  let completionWrites=0;
  let completionVersion=0;
  let refreshingList=false;
+ let overviewUI=null;
  const progressInterval=15000;
  let progressTimer;
  let nextProgressAt=0;
@@ -363,6 +365,7 @@
   (main.querySelector('.aw-edit-body')??main).prepend(alert);
  }
  function connect(date,intent='assign'){
+  clearTimeout(progressTimer);
   root.dataset.day=date===availableDates()[1]?'tomorrow':'today';
   busy=true;
   render();
@@ -378,7 +381,7 @@
     });
     units=makeUnits();
     revision=result.revision;
-    state={...state,date,step:0,view:intent==='view'?'view':intent==='edit'?'review':'attendance',directReview:intent!=='assign',attendance:uniqueAttendance(result.attendance),draft:result.assignments,labels:result.labels,completion:result.completion??{}};
+    state={...state,date,step:0,view:intent==='view'?'view':intent==='edit'?'review':'attendance',directReview:intent!=='assign',attendance:intent==='view'?result.attendance:uniqueAttendance(result.attendance),draft:result.assignments,labels:result.labels,completion:result.completion??{},notes:result.notes??{},handover:result.handover??[]};
     if(intent==='view'){
       state.saved={date,assignments:structuredClone(state.draft)};
       nextProgressAt=Date.now()+progressInterval;
@@ -401,9 +404,8 @@
     state.draft=assignments;
     state.saved={date:state.date,assignments:structuredClone(assignments)};
     savedInput=inputSnapshot();
-    state.view='saved';
     busy=false;
-    render();
+    connect(state.date,'view');
   }).catch(showError);
  }
  function options(v){return availablePeople().map(p=>`<option${v===p?' selected':''}>${esc(p)}</option>`).join('');}
@@ -425,6 +427,7 @@
   const previous=current.completion[id];
   box.disabled=true;
   completionWrites++;
+  overviewUI?.setSaving(true);
   completionVersion++;
   note.textContent='保存中…';
   try {
@@ -432,7 +435,7 @@
     current.completion[id]=result.checked;
     if(current!==state||!box.isConnected)return;
     box.checked=result.checked;
-    box.closest('tr').classList.toggle('aw-completion-done',result.checked);
+    (box.closest('[data-completion-item]')??box.closest('tr')).classList.toggle('aw-completion-done',result.checked);
     main.querySelector('#aw-completion-count').textContent=completionCount();
     note.textContent='保存済';
   }catch(error){
@@ -442,11 +445,12 @@
   }finally{
     completionWrites--;
     box.disabled=false;
+    if(!completionWrites)overviewUI?.setSaving(false);
     scheduleProgressRead();
   }
  }
  function canRefreshProgress(){
-  return session&&state.view==='view'&&!busy&&!refreshingList&&!completionWrites&&!document.hidden;
+  return session&&state.view==='view'&&!busy&&!refreshingList&&!completionWrites&&!overviewUI?.isEditing()&&!document.hidden;
  }
  function scheduleProgressRead(){
   clearTimeout(progressTimer);
@@ -461,10 +465,10 @@
   refreshingList=true;
   try {
     const result=await request('load',{date:current.date,scope:'progress'});
-    if(current!==state||state.view!=='view'||busy||completionWrites||version!==completionVersion)return;
+    if(current!==state||state.view!=='view'||busy||completionWrites||overviewUI?.isEditing()||version!==completionVersion)return;
     const completion=result.completion??{};
-    if(JSON.stringify([result.labels,result.assignments,completion])===
-       JSON.stringify([current.labels,current.draft,current.completion]))return;
+    if(JSON.stringify([result.labels,result.assignments,completion,result.attendance,result.notes,result.handover])===
+       JSON.stringify([current.labels,current.draft,current.completion,current.attendance,current.notes,current.handover]))return;
     const scrollTop=main.querySelector('.aw-edit-body').scrollTop;
     const focused=document.activeElement;
     const focusKey=focused?.dataset.completion;
@@ -475,6 +479,9 @@
     });
     units=makeUnits();
     current.labels=result.labels;
+    current.attendance=result.attendance;
+    current.notes=result.notes;
+    current.handover=result.handover;
     current.draft=result.assignments;
     current.saved={date:current.date,assignments:structuredClone(result.assignments)};
     current.completion=completion;
@@ -529,6 +536,28 @@
     return `<span class="aw-dot" data-position="${position}"></span>`;
   }).join('')}</span>`;
  }
+ function overviewDates(){
+  const now=Date.now();
+  return [-86400000,0,86400000].map(offset=>tokyoDate.format(now+offset).replaceAll('/','-'));
+ }
+ function renderOverview(){
+  const snapshot={date:state.date,dates:overviewDates(),tasks,assignments:state.draft,completion:state.completion,attendance:state.attendance,notes:state.notes,handover:state.handover};
+  if(overviewUI&&main.contains(overviewUI.element)){overviewUI.update(snapshot);return;}
+  overviewUI=window.mountAssignmentOverview(main,snapshot,{
+    onDate:day=>{if(!completionWrites)connect(day,'view');},
+    onHome:()=>{if(!completionWrites)returnHome();},
+    onEdit:()=>{if(!completionWrites)connect(state.date,'edit');},
+    onEditorClose:scheduleProgressRead,
+    saveText:async payload=>{
+      const current=state;
+      completionVersion++;
+      const result=await request('text',payload);
+      if(payload.id.startsWith('handover-'))current.handover.find(note=>note.id===payload.id).text=result.text;
+      else current.notes[payload.id]=result.text;
+      return result;
+    }
+  });
+ }
  function renderBoard(){
   const assignments=state.saved?.assignments ?? state.draft;
   const ordinary=tasks.filter(t=>!t.id.startsWith('floor-'));
@@ -548,7 +577,7 @@
   const section=(intent,title)=>`<section aria-labelledby="aw-home-${intent}"><h3 id="aw-home-${intent}">${title}</h3><div class="aw-start-options">${['今日','明日'].map((label,index)=>`
     <button type="button" data-start="${dates[index]}" data-start-day="${index?'tomorrow':'today'}" data-intent="${intent}" aria-label="${title}、${label} ${dates[index].replaceAll('-','/')}"><strong>${label}</strong><span>${dates[index].replaceAll('-','/')}</span></button>
   `).join('')}</div></section>`;
-  main.innerHTML=`<div class="aw-home">${section('assign','担当を割り付ける')}${section('view','進捗を入力する')}</div>`;
+  main.innerHTML=`<div class="aw-home">${section('assign','担当を割り付ける')}${section('view','担当・進捗')}</div>`;
  }
  function unavailableAssignments(){
   const candidates=new Set(availablePeople());
@@ -599,6 +628,13 @@
     return;
   }
   if(state.view==='start'){renderStart();return;}
+  if(state.view==='view'){
+    root.dataset.mode='overview';
+    root.dataset.layout='';
+    root.querySelector(':scope > header').hidden=true;
+    renderOverview();
+    return;
+  }
   if(state.view==='attendance'){
     headerTitle.innerHTML='<h3>出勤者を選ぶ</h3><span class="aw-step">担当割りの準備</span>';
     headerActions.innerHTML=homeButton;
@@ -718,7 +754,7 @@
  window.addEventListener('focus',refreshAssignmentList);
  if(params.has('code')||params.has('error'))completeSignIn(params).catch(showError);
  else if(!session)renderSignIn();
- else if(monitor)connect(availableDates()[0]);
+ else if(monitor) {monitor=false;connect(availableDates()[0],'view');}
  else render();
 })();
 </script>
