@@ -107,10 +107,15 @@ body {margin:0;}
 #assignee-wizard[data-mode=overview] .ap-layout thead th {background:var(--ap-tint);border-top:2px solid var(--ap-day);padding-block:6px;}
 #assignee-wizard[data-mode=overview] .ap-tasks thead th:first-child,
 #assignee-wizard[data-mode=overview] .ap-small thead th:first-child {font-size:1em;color:var(--ap-ink);}
-@media(min-width:1100px) {
-  #assignee-wizard[data-mode=overview] .ap-header {padding-block:6px;}
-  #assignee-wizard[data-mode=overview] .ap-body {padding-block:8px;}
-  #assignee-wizard[data-mode=overview] .ap-layout {margin-top:10px;}
-  #assignee-wizard[data-mode=overview] .ap-side {gap:10px;}
-  #assignee-wizard[data-mode=overview] .ap-shifts {padding-block:8px;}
+@media(min-width:1100px) and (not (pointer:coarse)) {
+  #assignee-wizard[data-mode=overview] .ap-header {padding-block:4px;}
+  #assignee-wizard[data-mode=overview] .ap-body {padding-block:6px;}
+  #assignee-wizard[data-mode=overview] .ap-layout {margin-top:8px;}
+  #assignee-wizard[data-mode=overview] .ap-side {gap:8px;}
+  #assignee-wizard[data-mode=overview] .ap-shifts {padding-block:6px;}
+  #assignee-wizard[data-mode=overview] .ap-section-title {padding-block:4px;}
+  #assignee-wizard[data-mode=overview] .ap-layout thead th {padding-block:5px;}
+  #assignee-wizard[data-mode=overview] :is(.ap-handoff,.ap-tasks,.ap-small) tbody :is(th,td) {padding-block:1px;}
+  #assignee-wizard[data-mode=overview] .ap-floor tbody :is(th,td) {padding-block:1.5px;}
+  #assignee-wizard[data-mode=overview] .ap-check {min-height:clamp(25px,1.7vw,32px);}
 }
